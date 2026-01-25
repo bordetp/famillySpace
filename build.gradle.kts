@@ -1,5 +1,5 @@
 plugins {
-    // Root project does not apply plugins; handled per module
+    // Plugins configured per-module
 }
 
 allprojects {

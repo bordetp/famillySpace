@@ -1,0 +1,38 @@
+# Android
+*.apk
+*.ap_
+*.aab
+*.dex
+*.class
+bin/
+obj/
+/build/
+.gradle/
+.idea/
+*.iml
+local.properties
+**/build/
+*.log
+
+# Android Studio
+.idea/
+*.iws
+out/
+
+# Gradle
+.gradle/
+
+# Kotlin
+*.kotlin_module
+
+# macOS
+.DS_Store
+
+# Go
+/bin/
+*.test
+*.out
+vendor/
+
+# Misc
+Thumbs.db

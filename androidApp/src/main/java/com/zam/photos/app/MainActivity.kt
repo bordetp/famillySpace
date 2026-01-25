@@ -3,6 +3,7 @@ package com.zam.photos.app
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import com.zam.photos.app.navigation.AppNavHost
@@ -13,7 +14,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             FamilySpaceTheme {
-                Surface {
+                Surface(color = MaterialTheme.colorScheme.background) {
                     FamilySpaceApp()
                 }
             }

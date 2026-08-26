@@ -24,6 +24,7 @@ import com.zam.photos.app.ui.screens.CreatePostScreen
 import com.zam.photos.app.ui.screens.ExploreScreen
 import com.zam.photos.app.ui.screens.FeedScreen
 import com.zam.photos.app.ui.screens.LoginScreen
+import com.zam.photos.app.ui.screens.PrivacyPolicyScreen
 import com.zam.photos.app.ui.screens.ProfileScreen
 import com.zam.photos.app.ui.screens.RegisterScreen
 
@@ -35,6 +36,7 @@ sealed class AppDestination(val route: String) {
     data object CreatePost : AppDestination("create")
     data object Comments : AppDestination("comments")
     data object Profile : AppDestination("profile")
+    data object PrivacyPolicy : AppDestination("privacy")
 }
 
 @Composable
@@ -43,10 +45,11 @@ fun AppNavHost(navController: NavHostController = rememberNavController()) {
     val currentRoute = navBackStackEntry?.destination?.route
 
     val isAuthScreen = currentRoute in listOf(AppDestination.Login.route, AppDestination.Register.route)
+    val hideBottomBar = isAuthScreen || currentRoute == AppDestination.PrivacyPolicy.route
 
     Scaffold(
         bottomBar = {
-            if (!isAuthScreen && currentRoute != null) {
+            if (!hideBottomBar && currentRoute != null) {
                 NavigationBar {
                     NavigationBarItem(
                         selected = currentRoute == AppDestination.Feed.route,
@@ -132,8 +135,12 @@ fun AppNavHost(navController: NavHostController = rememberNavController()) {
                         navController.navigate(AppDestination.Login.route) {
                             popUpTo(0) { inclusive = true }
                         }
-                    }
+                    },
+                    onOpenPrivacyPolicy = { navController.navigate(AppDestination.PrivacyPolicy.route) }
                 )
+            }
+            composable(AppDestination.PrivacyPolicy.route) {
+                PrivacyPolicyScreen(onBack = { navController.popBackStack() })
             }
         }
     }

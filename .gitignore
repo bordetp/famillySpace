@@ -11,6 +11,9 @@ obj/
 .idea/
 *.iml
 local.properties
+keystore.properties
+*.jks
+*.keystore
 **/build/
 *.log
 

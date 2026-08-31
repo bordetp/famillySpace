@@ -1,2 +1,3 @@
+Notifications push pour likes, commentaires et messages.
 Validation manuelle des nouvelles connexions.
-Page de modération : utilisateurs, posts et commentaires.
+Page de modération admin (utilisateurs, posts, commentaires).

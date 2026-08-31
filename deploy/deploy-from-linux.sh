@@ -43,7 +43,7 @@ tar -czf "$ARCHIVE" -C "$PROJECT_ROOT" \
   --exclude=uploads \
   --exclude=keystore_familly \
   --exclude=.env \
-  docker-compose.yml Dockerfile settings.gradle.kts build.gradle.kts gradle.properties \
+  docker-compose.yml Dockerfile settings.docker.gradle.kts settings.gradle.kts build.gradle.kts gradle.properties \
   gradlew gradlew.bat gradle backend shared deploy
 
 echo "==> Upload..."

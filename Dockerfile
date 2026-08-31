@@ -1,7 +1,7 @@
 # Multi-stage build for Family Space backend (amd64 + arm64)
 FROM eclipse-temurin:17-jdk AS builder
 WORKDIR /app
-COPY gradlew settings.gradle.kts build.gradle.kts gradle.properties ./
+COPY gradlew settings.docker.gradle.kts settings.gradle.kts build.gradle.kts gradle.properties ./
 COPY gradle ./gradle
 COPY shared ./shared
 COPY backend ./backend

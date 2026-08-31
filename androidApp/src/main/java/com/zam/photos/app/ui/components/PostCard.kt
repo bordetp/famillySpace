@@ -12,14 +12,15 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.outlined.ChatBubbleOutline
-import androidx.compose.material.icons.outlined.IosShare
+import androidx.compose.material.icons.outlined.Share
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -31,177 +32,161 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
-import coil.compose.AsyncImage
+import com.zam.photos.app.R
 import com.zam.photos.app.data.Post
+import com.zam.photos.app.ui.theme.InkSecondary
+import com.zam.photos.app.ui.theme.SurfaceWarm
+import com.zam.photos.app.ui.theme.Terracotta
+import com.zam.photos.app.ui.theme.TextMuted
 
 @Composable
 fun PostCard(
     post: Post,
     onCommentClick: () -> Unit,
     onLikeClick: () -> Unit,
-    onShareClick: () -> Unit
+    onShareClick: () -> Unit,
+    onPostClick: () -> Unit = {},
+    canDelete: Boolean = false,
+    onDeleteClick: () -> Unit = {},
+    modifier: Modifier = Modifier
 ) {
-    var isLiked by remember { mutableStateOf(post.isLiked) }
-    var likeCount by remember { mutableStateOf(post.likes) }
-
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
+            .widthIn(max = MaxFeedWidth)
             .background(MaterialTheme.colorScheme.surface)
-            .padding(bottom = 1.dp)
+            .clickable(onClick = onPostClick)
     ) {
-        // Header avec author
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(12.dp),
+                .padding(horizontal = 22.dp, vertical = 16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            AsyncImage(
-                model = post.author.profileImageUrl,
-                contentDescription = "Profile",
-                modifier = Modifier
-                    .size(40.dp)
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.surfaceVariant),
-                contentScale = ContentScale.Crop
-            )
-            Column(
-                modifier = Modifier
-                    .weight(1f)
-                    .padding(start = 12.dp)
-            ) {
-                Text(
-                    text = post.author.name,
-                    fontWeight = FontWeight.Bold,
-                    style = MaterialTheme.typography.bodyMedium
-                )
-                Text(
-                    text = post.author.username,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+            Avatar(name = post.author.name, imageUrl = post.author.profileImageUrl.takeIf { it.isNotBlank() }, size = 40.dp)
+            Column(modifier = Modifier.padding(start = 10.dp).weight(1f)) {
+                Text(post.author.name, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.titleMedium)
+                Text(post.createdAt, style = MaterialTheme.typography.labelMedium, color = TextMuted)
             }
-            IconButton(onClick = { }) {
-                Icon(Icons.Default.MoreVert, contentDescription = null)
-            }
+            PostOverflowMenu(canDelete = canDelete, onDeleteClick = onDeleteClick)
         }
 
-        // Contenu texte
-        Text(
-            text = post.content,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 12.dp),
-            style = MaterialTheme.typography.bodyMedium
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        // Image du post
-        if (post.imageUrl != null) {
-            AsyncImage(
-                model = post.imageUrl,
-                contentDescription = "Post image",
+        if (!post.imageUrl.isNullOrBlank()) {
+            AdaptivePostImage(url = post.imageUrl)
+        } else if (post.content.isNotBlank()) {
+            Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(300.dp),
-                contentScale = ContentScale.Crop
-            )
+                    .height(120.dp)
+                    .background(SurfaceWarm),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    post.content,
+                    modifier = Modifier.padding(22.dp),
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = InkSecondary
+                )
+            }
         }
 
-        // Engagement stats
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 12.dp, vertical = 8.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = "${likeCount} likes",
-                style = MaterialTheme.typography.labelSmall,
-                fontWeight = FontWeight.SemiBold
-            )
-            Text(
-                text = "${post.comments} comments",
-                style = MaterialTheme.typography.labelSmall,
-                fontWeight = FontWeight.SemiBold
-            )
-        }
-
-        // Divider
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(1.dp)
-                .background(MaterialTheme.colorScheme.surfaceVariant)
+        PostActionsRow(
+            post = post,
+            onCommentClick = onCommentClick,
+            onLikeClick = onLikeClick,
+            onShareClick = onShareClick,
+            modifier = Modifier.padding(horizontal = 22.dp, vertical = 12.dp)
         )
 
-        // Action buttons
-        Row(
+        if (post.content.isNotBlank() && !post.imageUrl.isNullOrBlank()) {
+            Text(
+                text = buildAnnotatedString {
+                    withStyle(SpanStyle(fontWeight = FontWeight.SemiBold)) { append(post.author.name) }
+                    append(" ")
+                    withStyle(SpanStyle(color = InkSecondary)) { append(post.content) }
+                },
+                modifier = Modifier.padding(start = 22.dp, end = 22.dp, bottom = 20.dp),
+                style = MaterialTheme.typography.bodyLarge
+            )
+        }
+
+        Spacer(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(4.dp),
-            horizontalArrangement = Arrangement.SpaceEvenly,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            ActionButton(
-                icon = if (isLiked) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
-                label = "Like",
-                tint = if (isLiked) Color.Red else MaterialTheme.colorScheme.onSurface,
-                onClick = {
-                    isLiked = !isLiked
-                    likeCount = if (isLiked) likeCount + 1 else likeCount - 1
-                    onLikeClick()
-                }
-            )
-            ActionButton(
-                icon = Icons.Outlined.ChatBubbleOutline,
-                label = "Comment",
-                onClick = onCommentClick
-            )
-            ActionButton(
-                icon = Icons.Outlined.IosShare,
-                label = "Share",
-                onClick = onShareClick
-            )
+                .height(8.dp)
+                .background(SurfaceWarm)
+        )
+    }
+}
+
+@Composable
+fun PostOverflowMenu(canDelete: Boolean, onDeleteClick: () -> Unit) {
+    var expanded by remember { mutableStateOf(false) }
+    Box {
+        IconButton(onClick = { expanded = true }, modifier = Modifier.size(24.dp)) {
+            Icon(Icons.Default.MoreVert, contentDescription = stringResource(R.string.post_menu), tint = TextMuted, modifier = Modifier.size(18.dp))
+        }
+        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+            if (canDelete) {
+                DropdownMenuItem(
+                    text = { Text(stringResource(R.string.delete_post)) },
+                    onClick = {
+                        expanded = false
+                        onDeleteClick()
+                    }
+                )
+            } else {
+                DropdownMenuItem(
+                    text = { Text(stringResource(R.string.share_post_link)) },
+                    onClick = { expanded = false }
+                )
+            }
         }
     }
 }
 
 @Composable
-fun ActionButton(
-    icon: ImageVector,
-    label: String,
-    tint: Color = MaterialTheme.colorScheme.onSurface,
-    onClick: () -> Unit
+fun PostActionsRow(
+    post: Post,
+    onCommentClick: () -> Unit,
+    onLikeClick: () -> Unit,
+    onShareClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     Row(
-        modifier = Modifier
-            .clip(RoundedCornerShape(8.dp))
-            .clickable(onClick = onClick)
-            .padding(8.dp),
-        horizontalArrangement = Arrangement.Center,
+        modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(18.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.clickable(onClick = onLikeClick)
+        ) {
+            Icon(
+                if (post.isLiked) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
+                contentDescription = stringResource(R.string.action_like),
+                modifier = Modifier.size(20.dp),
+                tint = if (post.isLiked) Terracotta else MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(modifier = Modifier.width(6.dp))
+            Text("${post.likes}", fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.labelLarge)
+        }
+        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.clickable(onClick = onCommentClick)) {
+            Icon(Icons.Outlined.ChatBubbleOutline, contentDescription = stringResource(R.string.action_comment), modifier = Modifier.size(20.dp))
+            Spacer(modifier = Modifier.width(6.dp))
+            Text("${post.comments}", fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.labelLarge)
+        }
+        Spacer(modifier = Modifier.weight(1f))
         Icon(
-            imageVector = icon,
-            contentDescription = label,
-            modifier = Modifier.size(20.dp),
-            tint = tint
-        )
-        Spacer(modifier = Modifier.width(4.dp))
-        Text(
-            text = label,
-            style = MaterialTheme.typography.labelSmall,
-            color = tint
+            Icons.Outlined.Share,
+            contentDescription = stringResource(R.string.action_share),
+            modifier = Modifier.size(19.dp).clickable(onClick = onShareClick)
         )
     }
 }

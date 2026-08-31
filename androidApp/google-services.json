@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "861827549861",
+    "project_id": "familyspace-7c980",
+    "storage_bucket": "familyspace-7c980.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:861827549861:android:0d5f53a03f7ca5ea9a5b4c",
+        "android_client_info": {
+          "package_name": "com.zam.photos.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBFj-0ip8_XE8TyvRi9GtCd97SlDmCqdVc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

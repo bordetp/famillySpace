@@ -34,5 +34,13 @@ out/
 *.out
 vendor/
 
+# Secrets
+secrets/
+keystore.properties
+keystore_familly
+deploy/firebase-admin.json
+deploy/play-store-credentials.json
+*-firebase-adminsdk-*.json
+
 # Misc
 Thumbs.db

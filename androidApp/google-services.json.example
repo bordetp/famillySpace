@@ -1,0 +1,34 @@
+{
+  "project_info": {
+    "project_number": "151953099656",
+    "project_id": "votre-projet",
+    "storage_bucket": "votre-projet.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:151953099656:android:xxxxxxxx",
+        "android_client_info": {
+          "package_name": "com.zam.photos.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "151953099656-xxxxx.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.zam.photos.app",
+            "certificate_hash": "0398b20991c9acbc0c1166120fd9abbeead8c85c"
+          }
+        },
+        {
+          "client_id": "151953099656-xxxxx.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [{ "current_key": "AIza..." }],
+      "services": { "appinvite_service": { "other_platform_oauth_client": [] } }
+    }
+  ],
+  "configuration_version": "1"
+}

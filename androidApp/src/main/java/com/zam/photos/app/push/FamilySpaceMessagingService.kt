@@ -8,9 +8,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import org.koin.android.ext.android.inject
-import org.koin.core.component.KoinComponent
 
-class FamilySpaceMessagingService : FirebaseMessagingService(), KoinComponent {
+class FamilySpaceMessagingService : FirebaseMessagingService() {
     private val deviceRepository: DeviceRepository by inject()
     private val pushTokenManager: PushTokenManager by inject()
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)

@@ -8,6 +8,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import com.zam.photos.app.navigation.AppNavHost
 import com.zam.photos.app.ui.theme.FamilySpaceTheme
+import com.zam.photos.app.update.AppUpdateHost
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -24,5 +25,7 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun FamilySpaceApp() {
-    AppNavHost()
+    AppUpdateHost {
+        AppNavHost()
+    }
 }

@@ -7,8 +7,13 @@ data class UserProfile(
     val bio: String,
     val profileImageUrl: String,
     val followerCount: Int = 0,
-    val followingCount: Int = 0
-)
+    val followingCount: Int = 0,
+    val approvalStatus: String = "approved"
+) {
+    val isApproved: Boolean get() = approvalStatus.equals("approved", ignoreCase = true)
+    val isPending: Boolean get() = approvalStatus.equals("pending", ignoreCase = true)
+    val isRejected: Boolean get() = approvalStatus.equals("rejected", ignoreCase = true)
+}
 
 data class Post(
     val id: String,

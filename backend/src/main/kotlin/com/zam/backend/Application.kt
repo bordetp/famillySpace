@@ -1,137 +1,107 @@
 package com.zam.backend
 
-import io.ktor.serialization.kotlinx.json.*
-import io.ktor.server.application.*
-import io.ktor.server.auth.*
-import io.ktor.server.auth.jwt.*
+import com.zam.backend.db.DatabaseFactory
+import com.zam.backend.plugins.configureAuthentication
+import com.zam.backend.plugins.configureCors
+import com.zam.backend.plugins.configureSerialization
+import com.zam.backend.plugins.configureStatusPages
+import com.zam.backend.realtime.ChatHub
+import com.zam.backend.repository.postgres.PostgresCommentRepository
+import com.zam.backend.repository.postgres.PostgresConversationRepository
+import com.zam.backend.repository.postgres.PostgresFamilyRepository
+import com.zam.backend.repository.postgres.PostgresFcmTokenRepository
+import com.zam.backend.repository.postgres.PostgresLikeRepository
+import com.zam.backend.repository.postgres.PostgresNotificationRepository
+import com.zam.backend.repository.postgres.PostgresPostRepository
+import com.zam.backend.repository.postgres.PostgresUserRepository
+import com.zam.backend.routes.adminRoutes
+import com.zam.backend.routes.authRoutes
+import com.zam.backend.routes.chatRoutes
+import com.zam.backend.routes.chatSocket
+import com.zam.backend.routes.deviceRoutes
+import com.zam.backend.routes.familyRoutes
+import com.zam.backend.routes.healthRoutes
+import com.zam.backend.routes.notificationRoutes
+import com.zam.backend.routes.postRoutes
+import com.zam.backend.routes.staticUploadRoutes
+import com.zam.backend.routes.uploadRoutes
+import com.zam.backend.services.AdminService
+import com.zam.backend.services.AuthService
+import com.zam.backend.services.ChatService
+import com.zam.backend.services.DeviceService
+import com.zam.backend.services.FamilyService
+import com.zam.backend.services.FcmSender
+import com.zam.backend.services.GoogleIdTokenService
+import com.zam.backend.services.ImageService
+import com.zam.backend.services.NotificationService
+import com.zam.backend.services.PostService
+import io.ktor.server.application.Application
+import io.ktor.server.application.install
 import io.ktor.server.engine.embeddedServer
 import io.ktor.server.netty.Netty
-import io.ktor.server.plugins.callloging.*
-import io.ktor.server.plugins.contentnegotiation.*
-import io.ktor.server.response.*
-import io.ktor.server.request.*
-import io.ktor.server.routing.*
-import kotlinx.serialization.Serializable
-import java.util.UUID
+import io.ktor.server.plugins.callloging.CallLogging
+import io.ktor.server.routing.routing
+import io.ktor.server.websocket.WebSockets
+import io.ktor.server.websocket.pingPeriod
+import io.ktor.server.websocket.timeout
+import java.io.File
+import java.time.Duration
 
 fun main() {
-    embeddedServer(Netty, port = 8080, host = "0.0.0.0") {
-        install(CallLogging)
-        install(ContentNegotiation) { json() }
-        install(Authentication) {
-            jwt("auth-jwt") {
-                // Placeholder verifier; wire real JWT provider later
-                verifier { token -> JWTPrincipal(token.payload) }
-                validate { credential ->
-                    if (credential.payload.getClaim("userId").asString() != null) JWTPrincipal(credential.payload) else null
-                }
-            }
-        }
-
-        val repository = InMemoryRepository()
-
-        routing {
-            route("/api") {
-                post("/auth/register") {
-                    val request = call.receive<AuthRequest>()
-                    val user = repository.register(request.email, request.password)
-                    call.respond(AuthResponse(userId = user.id))
-                }
-                post("/auth/login") {
-                    val request = call.receive<AuthRequest>()
-                    val user = repository.login(request.email, request.password)
-                    call.respond(AuthResponse(userId = user.id))
-                }
-
-                authenticate("auth-jwt") {
-                    route("/posts") {
-                        get {
-                            call.respond(repository.posts())
-                        }
-                        post {
-                            val postRequest = call.receive<CreatePostRequest>()
-                            val userId = call.principal<JWTPrincipal>()?.payload?.getClaim("userId")?.asString() ?: ""
-                            val post = repository.addPost(userId, postRequest.content)
-                            call.respond(post)
-                        }
-                        get("/{id}/comments") {
-                            val postId = call.parameters["id"] ?: return@get call.respondText("Missing id", status = io.ktor.http.HttpStatusCode.BadRequest)
-                            call.respond(repository.comments(postId))
-                        }
-                        post("/{id}/comments") {
-                            val postId = call.parameters["id"] ?: return@post call.respondText("Missing id", status = io.ktor.http.HttpStatusCode.BadRequest)
-                            val request = call.receive<CommentRequest>()
-                            val userId = call.principal<JWTPrincipal>()?.payload?.getClaim("userId")?.asString() ?: ""
-                            val comment = repository.addComment(postId, userId, request.content)
-                            call.respond(comment)
-                        }
-                    }
-
-                    route("/users") {
-                        get("/{id}") {
-                            val id = call.parameters["id"] ?: return@get call.respondText("Missing id", status = io.ktor.http.HttpStatusCode.BadRequest)
-                            call.respond(repository.user(id))
-                        }
-                    }
-                }
-            }
-        }
+    val config = AppConfig()
+    embeddedServer(Netty, port = config.port, host = config.host) {
+        module(config)
     }.start(wait = true)
 }
 
-class InMemoryRepository {
-    private val users = mutableMapOf<String, User>()
-    private val posts = mutableListOf<Post>()
-    private val comments = mutableListOf<Comment>()
+fun Application.module(config: AppConfig = AppConfig()) {
+    DatabaseFactory.init(config)
 
-    fun register(email: String, password: String): User {
-        val id = UUID.randomUUID().toString()
-        val user = User(id = id, email = email, password = password)
-        users[id] = user
-        return user
+    File(config.uploadDir).mkdirs()
+
+    val userRepository = PostgresUserRepository()
+    val commentRepository = PostgresCommentRepository(userRepository)
+    val postRepository = PostgresPostRepository(userRepository, commentRepository)
+    val likeRepository = PostgresLikeRepository()
+    val notificationRepository = PostgresNotificationRepository()
+    val conversationRepository = PostgresConversationRepository(userRepository)
+    val familyRepository = PostgresFamilyRepository()
+    val fcmTokenRepository = PostgresFcmTokenRepository()
+    val chatHub = ChatHub()
+    val fcmSender = FcmSender(config)
+
+    val authService = AuthService(config, userRepository, GoogleIdTokenService(config))
+    val notificationService = NotificationService(notificationRepository, userRepository, fcmTokenRepository, fcmSender)
+    val postService = PostService(postRepository, commentRepository, likeRepository, familyRepository, notificationService)
+    val adminService = AdminService(config, userRepository, postRepository, commentRepository)
+    val chatService = ChatService(conversationRepository, userRepository, notificationService, chatHub)
+    val familyService = FamilyService(familyRepository, conversationRepository, userRepository, notificationService)
+    val deviceService = DeviceService(userRepository, fcmTokenRepository)
+    val imageService = ImageService(config)
+
+    install(CallLogging)
+    install(WebSockets) {
+        pingPeriod = Duration.ofSeconds(20)
+        timeout = Duration.ofSeconds(30)
+        maxFrameSize = Long.MAX_VALUE
+        masking = false
     }
+    configureSerialization()
+    configureCors()
+    configureStatusPages()
+    configureAuthentication(config)
 
-    fun login(email: String, password: String): User {
-        return users.values.firstOrNull { it.email == email && it.password == password }
-            ?: register(email, password)
+    routing {
+        healthRoutes()
+        staticUploadRoutes(config.uploadDir)
+        authRoutes(authService)
+        postRoutes(postService, authService)
+        adminRoutes(adminService)
+        notificationRoutes(notificationService, authService)
+        chatRoutes(chatService, authService)
+        familyRoutes(familyService, authService)
+        deviceRoutes(deviceService, authService)
+        uploadRoutes(imageService, authService)
+        chatSocket(chatHub, authService)
     }
-
-    fun addPost(userId: String, content: String): Post {
-        val post = Post(id = UUID.randomUUID().toString(), authorId = userId, content = content)
-        posts.add(post)
-        return post
-    }
-
-    fun posts(): List<Post> = posts
-
-    fun addComment(postId: String, userId: String, content: String): Comment {
-        val comment = Comment(id = UUID.randomUUID().toString(), postId = postId, authorId = userId, content = content)
-        comments.add(comment)
-        return comment
-    }
-
-    fun comments(postId: String): List<Comment> = comments.filter { it.postId == postId }
-
-    fun user(id: String): User? = users[id]
 }
-
-@Serializable
-data class User(val id: String, val email: String, val password: String)
-
-@Serializable
-data class Post(val id: String, val authorId: String, val content: String)
-
-@Serializable
-data class Comment(val id: String, val postId: String, val authorId: String, val content: String)
-
-@Serializable
-data class AuthRequest(val email: String, val password: String)
-
-@Serializable
-data class AuthResponse(val userId: String)
-
-@Serializable
-data class CreatePostRequest(val content: String)
-
-@Serializable
-data class CommentRequest(val content: String)

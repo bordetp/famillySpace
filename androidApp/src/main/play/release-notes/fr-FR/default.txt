@@ -1,0 +1,2 @@
+Validation manuelle des nouvelles connexions.
+Page de modération : utilisateurs, posts et commentaires.

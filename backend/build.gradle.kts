@@ -26,6 +26,8 @@ dependencies {
 
     implementation("ch.qos.logback:logback-classic:1.4.12")
 
+    implementation("com.google.firebase:firebase-admin:9.2.0")
+
     testImplementation(kotlin("test"))
     testImplementation("io.ktor:ktor-server-tests-jvm:$ktorVersion")
 }

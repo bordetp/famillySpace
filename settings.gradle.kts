@@ -19,4 +19,4 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "famillySpace"
-include(":androidApp", ":backend")
+include(":androidApp", ":backend", ":shared")

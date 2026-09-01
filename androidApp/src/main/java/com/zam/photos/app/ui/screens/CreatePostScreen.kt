@@ -241,7 +241,7 @@ fun CreatePostScreen(
                     contentAlignment = Alignment.Center
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                        Icon(Icons.Outlined.AddPhotoAlternate, contentDescription = null, modifier = Modifier.size(30.dp), tint = TextPlaceholder)
+                        Icon(Icons.Outlined.AddPhotoAlternate, contentDescription = null, modifier = Modifier.size(30.dp), tint = MaterialTheme.colorScheme.appPlaceholder)
                         Text(stringResource(R.string.add_photo), color = MaterialTheme.colorScheme.appPlaceholder, style = MaterialTheme.typography.labelMedium)
                     }
                 }
@@ -270,7 +270,7 @@ fun CreatePostScreen(
                         .clickable { openPhotoSourcePicker() },
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(Icons.Filled.Add, contentDescription = null, tint = TextPlaceholder, modifier = Modifier.size(18.dp))
+                    Icon(Icons.Filled.Add, contentDescription = null, tint = MaterialTheme.colorScheme.appPlaceholder, modifier = Modifier.size(18.dp))
                 }
             }
 

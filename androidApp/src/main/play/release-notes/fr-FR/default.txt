@@ -1,1 +1,2 @@
-Mode sombre, appareil photo et galerie pour publier une photo.
+Mode sombre, appareil photo et galerie. Cible Android 15 (API 35).
+

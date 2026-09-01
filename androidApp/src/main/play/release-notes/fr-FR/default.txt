@@ -1,2 +1,3 @@
-Mode sombre, appareil photo et galerie. Cible Android 15 (API 35).
+Mode sombre, appareil photo et galerie. Cible Android 16 (API 36).
+
 

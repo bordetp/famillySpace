@@ -28,8 +28,8 @@ android {
     defaultConfig {
         applicationId = "com.zam.photos.app"
         minSdk = 24
-        targetSdk = 35
-        versionCode = 34
+        targetSdk = 36
+        versionCode = 35
         versionName = "1.7.13"
         buildConfigField("String", "API_BASE_URL", "\"http://10.0.2.2:8080\"")
         buildConfigField("String", "GOOGLE_WEB_CLIENT_ID", "\"$googleWebClientId\"")

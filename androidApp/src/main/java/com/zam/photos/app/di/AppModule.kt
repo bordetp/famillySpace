@@ -3,6 +3,7 @@ package com.zam.photos.app.di
 import com.zam.photos.app.auth.GoogleSignInHelper
 import com.zam.photos.app.data.api.createHttpClient
 import com.zam.photos.app.data.local.TokenStore
+import com.zam.photos.app.data.local.ThemeStore
 import com.zam.photos.app.data.repository.AuthRepository
 import com.zam.photos.app.data.repository.ChatRepository
 import com.zam.photos.app.data.repository.DeviceRepository
@@ -27,6 +28,7 @@ import org.koin.dsl.module
 
 val appModule = module {
     single { TokenStore(androidContext()) }
+    single { ThemeStore(androidContext()) }
     single { GoogleSignInHelper() }
     single { createHttpClient(get()) }
     single { AuthRepository(get(), get(), get()) }
@@ -47,7 +49,7 @@ val appModule = module {
     viewModel { InboxViewModel(get()) }
     viewModel { (conversationId: String) -> ChatThreadViewModel(get(), get(), get(), conversationId) }
     viewModel { NewConversationViewModel(get()) }
-    viewModel { SettingsViewModel(get(), get()) }
+    viewModel { SettingsViewModel(get(), get(), get()) }
     viewModel { (postId: String) -> PostDetailViewModel(get(), postId) }
     viewModel { com.zam.photos.app.viewmodel.ModerationViewModel(get()) }
 }

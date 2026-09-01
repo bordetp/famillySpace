@@ -40,8 +40,11 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.zam.photos.app.R
-import com.zam.photos.app.ui.theme.BorderLight
 import com.zam.photos.app.ui.theme.Terracotta
+import com.zam.photos.app.ui.theme.appBorder
+import com.zam.photos.app.ui.theme.appMuted
+import com.zam.photos.app.ui.theme.appPlaceholder
+import com.zam.photos.app.ui.theme.appSurfaceWarm
 
 data class BottomNavItem(
     val route: String,
@@ -68,7 +71,7 @@ fun FamilyBottomBar(
     )
 
     Column {
-        HorizontalDivider(color = BorderLight, thickness = 1.dp)
+        HorizontalDivider(color = MaterialTheme.colorScheme.appBorder, thickness = 1.dp)
         NavigationBar(
             containerColor = MaterialTheme.colorScheme.surface,
             tonalElevation = 0.dp
@@ -197,6 +200,6 @@ fun FamilySpaceFeedHeader(
                 }
             }
         }
-        HorizontalDivider(color = BorderLight)
+        HorizontalDivider(color = MaterialTheme.colorScheme.appBorder)
     }
 }

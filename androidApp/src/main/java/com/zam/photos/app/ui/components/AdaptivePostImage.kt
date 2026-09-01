@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -19,7 +20,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.min
 import coil.compose.AsyncImage
-import com.zam.photos.app.ui.theme.SurfaceWarm
+import com.zam.photos.app.ui.theme.appSurfaceWarm
 
 /** Caps feed/detail width so photos are not stretched into a thin band on tablets. */
 val MaxFeedWidth = 640.dp
@@ -42,7 +43,7 @@ fun AdaptivePostImage(
     BoxWithConstraints(
         modifier = modifier
             .fillMaxWidth()
-            .background(SurfaceWarm),
+            .background(MaterialTheme.colorScheme.appSurfaceWarm),
         contentAlignment = Alignment.Center
     ) {
         val width = if (maxWidth == Dp.Infinity) MaxFeedWidth else maxWidth

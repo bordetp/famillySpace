@@ -53,10 +53,11 @@ import com.zam.photos.app.ui.components.Avatar
 import com.zam.photos.app.ui.components.EmptyState
 import com.zam.photos.app.ui.components.RefreshOnResume
 import com.zam.photos.app.di.activityKoinViewModel
-import com.zam.photos.app.ui.theme.BorderLight
-import com.zam.photos.app.ui.theme.SurfaceWarm
 import com.zam.photos.app.ui.theme.Terracotta
-import com.zam.photos.app.ui.theme.TextMuted
+import com.zam.photos.app.ui.theme.appBorder
+import com.zam.photos.app.ui.theme.appMuted
+import com.zam.photos.app.ui.theme.appPlaceholder
+import com.zam.photos.app.ui.theme.appSurfaceWarm
 import com.zam.photos.app.viewmodel.ChatThreadViewModel
 import com.zam.photos.app.viewmodel.InboxViewModel
 import com.zam.photos.app.viewmodel.NewConversationViewModel
@@ -79,7 +80,7 @@ fun MessagesInboxScreen(
                 modifier = Modifier.padding(horizontal = 22.dp, vertical = 18.dp),
                 style = MaterialTheme.typography.titleLarge
             )
-            HorizontalDivider(color = BorderLight)
+            HorizontalDivider(color = MaterialTheme.colorScheme.appBorder)
             when {
                 state.isLoading -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     androidx.compose.material3.CircularProgressIndicator(color = Terracotta)
@@ -121,13 +122,13 @@ private fun ConversationRow(conversation: Conversation, onClick: () -> Unit) {
             Text(name, fontWeight = FontWeight.SemiBold)
             Text(
                 conversation.lastMessage?.body ?: stringResource(R.string.no_messages_yet),
-                color = TextMuted,
+                color = MaterialTheme.colorScheme.appMuted,
                 style = MaterialTheme.typography.bodySmall,
                 maxLines = 1
             )
         }
         Column(horizontalAlignment = Alignment.End) {
-            Text(conversation.updatedAt, style = MaterialTheme.typography.labelSmall, color = TextMuted)
+            Text(conversation.updatedAt, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.appMuted)
             if (conversation.unreadCount > 0) {
                 Box(
                     modifier = Modifier.padding(top = 6.dp).clip(RoundedCornerShape(10.dp)).background(Terracotta).padding(horizontal = 8.dp, vertical = 2.dp)
@@ -137,7 +138,7 @@ private fun ConversationRow(conversation: Conversation, onClick: () -> Unit) {
             }
         }
     }
-    HorizontalDivider(color = BorderLight, modifier = Modifier.padding(start = 82.dp))
+    HorizontalDivider(color = MaterialTheme.colorScheme.appBorder, modifier = Modifier.padding(start = 82.dp))
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -168,7 +169,7 @@ fun ChatThreadScreen(
                 }
             }
         )
-        HorizontalDivider(color = BorderLight)
+        HorizontalDivider(color = MaterialTheme.colorScheme.appBorder)
         LazyColumn(
             state = listState,
             modifier = Modifier.weight(1f).fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
@@ -179,7 +180,7 @@ fun ChatThreadScreen(
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = if (message.body.isNotEmpty()) Arrangement.Start else Arrangement.Start) {
                     Avatar(name = message.author.name, imageUrl = message.author.profileImageUrl.takeIf { it.isNotBlank() }, size = 28.dp)
                     Column(
-                        modifier = Modifier.padding(start = 8.dp).clip(RoundedCornerShape(14.dp)).background(SurfaceWarm).padding(10.dp)
+                        modifier = Modifier.padding(start = 8.dp).clip(RoundedCornerShape(14.dp)).background(MaterialTheme.colorScheme.appSurfaceWarm).padding(10.dp)
                     ) {
                         Text(message.author.name, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.SemiBold)
                         Text(message.body, style = MaterialTheme.typography.bodyMedium)
@@ -187,13 +188,13 @@ fun ChatThreadScreen(
                 }
             }
         }
-        HorizontalDivider(color = BorderLight)
+        HorizontalDivider(color = MaterialTheme.colorScheme.appBorder)
         Row(
             modifier = Modifier.fillMaxWidth().padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Box(
-                modifier = Modifier.weight(1f).clip(RoundedCornerShape(20.dp)).background(SurfaceWarm).padding(horizontal = 16.dp, vertical = 10.dp)
+                modifier = Modifier.weight(1f).clip(RoundedCornerShape(20.dp)).background(MaterialTheme.colorScheme.appSurfaceWarm).padding(horizontal = 16.dp, vertical = 10.dp)
             ) {
                 BasicTextField(
                     value = text,
@@ -201,7 +202,7 @@ fun ChatThreadScreen(
                     modifier = Modifier.fillMaxWidth(),
                     textStyle = MaterialTheme.typography.bodyMedium.copy(color = MaterialTheme.colorScheme.onSurface),
                     decorationBox = { inner ->
-                        if (text.isEmpty()) Text(stringResource(R.string.message_hint), color = TextMuted)
+                        if (text.isEmpty()) Text(stringResource(R.string.message_hint), color = MaterialTheme.colorScheme.appMuted)
                         inner()
                     }
                 )
@@ -245,7 +246,7 @@ fun NewConversationScreen(
                 )
             }
         )
-        HorizontalDivider(color = BorderLight)
+        HorizontalDivider(color = MaterialTheme.colorScheme.appBorder)
         Row(modifier = Modifier.padding(16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             FilterChip(
                 selected = !state.isGroup,
@@ -285,7 +286,7 @@ fun NewConversationScreen(
                     Avatar(name = user.name, imageUrl = user.profileImageUrl.takeIf { it.isNotBlank() }, size = 40.dp)
                     Column(modifier = Modifier.padding(start = 12.dp).weight(1f)) {
                         Text(user.name, fontWeight = FontWeight.SemiBold)
-                        Text(user.username, color = TextMuted, style = MaterialTheme.typography.bodySmall)
+                        Text(user.username, color = MaterialTheme.colorScheme.appMuted, style = MaterialTheme.typography.bodySmall)
                     }
                     if (selected) Text("✓", color = Terracotta, fontWeight = FontWeight.Bold)
                 }

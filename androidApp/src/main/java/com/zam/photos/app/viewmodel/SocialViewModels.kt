@@ -150,12 +150,20 @@ class NewConversationViewModel(private val chatRepository: ChatRepository) : Vie
 
 class SettingsViewModel(
     private val familyRepository: FamilyRepository,
-    private val deviceRepository: DeviceRepository
+    private val deviceRepository: DeviceRepository,
+    private val themeStore: com.zam.photos.app.data.local.ThemeStore
 ) : ViewModel() {
     private val _state = MutableStateFlow(SettingsUiState())
     val state: StateFlow<SettingsUiState> = _state.asStateFlow()
 
-    init { refresh() }
+    init {
+        viewModelScope.launch {
+            themeStore.themeModeFlow.collect { mode ->
+                _state.value = _state.value.copy(themeMode = mode)
+            }
+        }
+        refresh()
+    }
 
     fun refresh() {
         viewModelScope.launch {
@@ -188,6 +196,12 @@ class SettingsViewModel(
                 is ApiResult.Success -> _state.value = _state.value.copy(pushEnabled = result.data)
                 is ApiResult.Error -> _state.value = _state.value.copy(error = result.message)
             }
+        }
+    }
+
+    fun setThemeMode(mode: com.zam.photos.app.ui.theme.ThemeMode) {
+        viewModelScope.launch {
+            themeStore.setThemeMode(mode)
         }
     }
 

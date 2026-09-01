@@ -29,7 +29,7 @@ import androidx.compose.ui.unit.dp
 import com.zam.photos.app.R
 import com.zam.photos.app.ui.components.RefreshOnResume
 import com.zam.photos.app.ui.theme.Terracotta
-import com.zam.photos.app.ui.theme.TextMuted
+import com.zam.photos.app.ui.theme.appMuted
 
 @Composable
 fun PendingApprovalScreen(
@@ -70,7 +70,7 @@ fun PendingApprovalScreen(
                 else R.string.approval_pending_message
             ),
             style = MaterialTheme.typography.bodyMedium,
-            color = TextMuted,
+            color = MaterialTheme.colorScheme.appMuted,
             textAlign = TextAlign.Center
         )
         Spacer(modifier = Modifier.height(28.dp))

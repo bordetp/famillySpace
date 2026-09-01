@@ -25,6 +25,9 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -38,8 +41,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.zam.photos.app.R
-import com.zam.photos.app.ui.theme.BorderLight
-import com.zam.photos.app.ui.theme.TextMuted
+import com.zam.photos.app.ui.theme.ThemeMode
+import com.zam.photos.app.ui.theme.appBorder
+import com.zam.photos.app.ui.theme.appMuted
 import com.zam.photos.app.ui.components.RefreshOnResume
 import com.zam.photos.app.viewmodel.SettingsViewModel
 import org.koin.androidx.compose.koinViewModel
@@ -66,7 +70,7 @@ fun SettingsScreen(
                 }
             }
         )
-        HorizontalDivider(color = BorderLight)
+        HorizontalDivider(color = MaterialTheme.colorScheme.appBorder)
 
         Column(
             modifier = Modifier
@@ -75,15 +79,36 @@ fun SettingsScreen(
                 .padding(22.dp),
             verticalArrangement = Arrangement.spacedBy(18.dp)
         ) {
+            Text(stringResource(R.string.settings_appearance), fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.titleMedium)
+            val themeOptions = listOf(
+                ThemeMode.LIGHT to R.string.theme_light,
+                ThemeMode.DARK to R.string.theme_dark,
+                ThemeMode.SYSTEM to R.string.theme_system
+            )
+            SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
+                themeOptions.forEachIndexed { index, (mode, labelRes) ->
+                    SegmentedButton(
+                        selected = state.themeMode == mode,
+                        onClick = { viewModel.setThemeMode(mode) },
+                        shape = SegmentedButtonDefaults.itemShape(index = index, count = themeOptions.size),
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text(stringResource(labelRes), style = MaterialTheme.typography.labelMedium)
+                    }
+                }
+            }
+
+            HorizontalDivider(color = MaterialTheme.colorScheme.appBorder)
+
             Text(stringResource(R.string.settings_notifications), fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.titleMedium)
             Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
                 Icon(Icons.Outlined.Notifications, contentDescription = null, modifier = Modifier.size(20.dp))
                 Text(stringResource(R.string.push_notifications), modifier = Modifier.weight(1f).padding(horizontal = 12.dp))
                 Switch(checked = state.pushEnabled, onCheckedChange = viewModel::setPushEnabled)
             }
-            Text(stringResource(R.string.push_notifications_hint), style = MaterialTheme.typography.bodySmall, color = TextMuted)
+            Text(stringResource(R.string.push_notifications_hint), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.appMuted)
 
-            HorizontalDivider(color = BorderLight)
+            HorizontalDivider(color = MaterialTheme.colorScheme.appBorder)
 
             if (showModeration) {
                 Row(
@@ -93,7 +118,7 @@ fun SettingsScreen(
                     Icon(Icons.Outlined.Shield, contentDescription = null, modifier = Modifier.size(20.dp))
                     Text(stringResource(R.string.moderation_entry), modifier = Modifier.padding(start = 12.dp))
                 }
-                HorizontalDivider(color = BorderLight)
+                HorizontalDivider(color = MaterialTheme.colorScheme.appBorder)
             }
 
             Row(

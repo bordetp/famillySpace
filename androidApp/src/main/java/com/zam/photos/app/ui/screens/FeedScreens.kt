@@ -78,12 +78,13 @@ import com.zam.photos.app.ui.components.MaxFeedWidth
 import com.zam.photos.app.ui.components.PostActionsRow
 import com.zam.photos.app.ui.components.PostCard
 import com.zam.photos.app.ui.components.RefreshOnResume
-import com.zam.photos.app.ui.theme.BorderLight
 import com.zam.photos.app.ui.theme.BorderStripe
 import com.zam.photos.app.ui.theme.InkSecondary
-import com.zam.photos.app.ui.theme.SurfaceWarm
 import com.zam.photos.app.ui.theme.Terracotta
-import com.zam.photos.app.ui.theme.TextMuted
+import com.zam.photos.app.ui.theme.appBorder
+import com.zam.photos.app.ui.theme.appMuted
+import com.zam.photos.app.ui.theme.appPlaceholder
+import com.zam.photos.app.ui.theme.appSurfaceWarm
 import com.zam.photos.app.di.activityKoinViewModel
 import com.zam.photos.app.viewmodel.CommentsViewModel
 import com.zam.photos.app.viewmodel.FeedViewModel
@@ -190,7 +191,7 @@ fun MessagesScreen() {
             modifier = Modifier.padding(top = 18.dp, bottom = 12.dp),
             style = MaterialTheme.typography.titleLarge
         )
-        HorizontalDivider(color = BorderLight)
+        HorizontalDivider(color = MaterialTheme.colorScheme.appBorder)
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             EmptyState(
                 Icons.Outlined.ChatBubbleOutline,
@@ -218,7 +219,7 @@ fun ExploreScreen(
             modifier = Modifier.padding(horizontal = 22.dp, vertical = 18.dp),
             style = MaterialTheme.typography.titleLarge
         )
-        HorizontalDivider(color = BorderLight)
+        HorizontalDivider(color = MaterialTheme.colorScheme.appBorder)
 
         when {
             state.isLoading -> LoadingBox()
@@ -281,7 +282,7 @@ fun PostDetailScreen(
             }
             Text(stringResource(R.string.post_detail), style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(start = 4.dp))
         }
-        HorizontalDivider(color = BorderLight)
+        HorizontalDivider(color = MaterialTheme.colorScheme.appBorder)
 
         if (post == null) {
             LoadingBox()
@@ -303,7 +304,7 @@ fun PostDetailScreen(
                     Avatar(name = post.author.name, imageUrl = post.author.profileImageUrl.takeIf { it.isNotBlank() }, size = 40.dp)
                     Column(modifier = Modifier.padding(start = 10.dp)) {
                         Text(post.author.name, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.titleMedium)
-                        Text(post.createdAt, style = MaterialTheme.typography.labelMedium, color = TextMuted)
+                        Text(post.createdAt, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.appMuted)
                     }
                 }
             }
@@ -337,7 +338,7 @@ fun PostDetailScreen(
                     )
                 }
                 HorizontalDivider(
-                    color = BorderLight,
+                    color = MaterialTheme.colorScheme.appBorder,
                     modifier = Modifier.widthIn(max = MaxFeedWidth).padding(horizontal = 22.dp)
                 )
             }
@@ -350,7 +351,7 @@ fun PostDetailScreen(
                     Text(
                         stringResource(R.string.comments_section),
                         style = MaterialTheme.typography.labelSmall,
-                        color = TextMuted,
+                        color = MaterialTheme.colorScheme.appMuted,
                         fontWeight = FontWeight.SemiBold,
                         letterSpacing = MaterialTheme.typography.labelSmall.letterSpacing
                     )
@@ -422,7 +423,7 @@ fun CommentsScreen(
                 fontWeight = FontWeight.SemiBold,
                 style = MaterialTheme.typography.titleMedium
             )
-            HorizontalDivider(color = BorderLight)
+            HorizontalDivider(color = MaterialTheme.colorScheme.appBorder)
 
             when {
                 state.isLoading -> Box(Modifier.fillMaxWidth().height(200.dp), contentAlignment = Alignment.Center) {
@@ -451,7 +452,7 @@ fun CommentsScreen(
                 }
             }
 
-            HorizontalDivider(color = BorderLight)
+            HorizontalDivider(color = MaterialTheme.colorScheme.appBorder)
             Row(
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 22.dp, vertical = 14.dp),
                 verticalAlignment = Alignment.CenterVertically
@@ -464,7 +465,7 @@ fun CommentsScreen(
                     modifier = Modifier
                         .weight(1f)
                         .clip(RoundedCornerShape(20.dp))
-                        .background(SurfaceWarm)
+                        .background(MaterialTheme.colorScheme.appSurfaceWarm)
                         .padding(horizontal = 16.dp, vertical = 9.dp)
                 ) {
                     androidx.compose.foundation.text.BasicTextField(
@@ -476,7 +477,7 @@ fun CommentsScreen(
                             if (commentText.isEmpty()) {
                                 val hint = state.replyTo?.let { stringResource(R.string.reply_to, it.author.name) }
                                     ?: stringResource(R.string.add_comment)
-                                Text(hint, color = TextMuted, style = MaterialTheme.typography.bodyMedium)
+                                Text(hint, color = MaterialTheme.colorScheme.appMuted, style = MaterialTheme.typography.bodyMedium)
                             }
                             inner()
                         }
@@ -546,11 +547,11 @@ fun CommentItem(
                 )
             }
             Row(modifier = Modifier.padding(top = 4.dp)) {
-                Text(comment.createdAt, style = MaterialTheme.typography.labelSmall, color = TextMuted)
+                Text(comment.createdAt, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.appMuted)
                 Text(
                     " · ${stringResource(R.string.reply)}",
                     style = MaterialTheme.typography.labelSmall,
-                    color = TextMuted,
+                    color = MaterialTheme.colorScheme.appMuted,
                     modifier = Modifier.clickable(onClick = onReply)
                 )
             }
@@ -560,7 +561,7 @@ fun CommentItem(
                 Icon(Icons.Filled.Close, contentDescription = null, modifier = Modifier.size(0.dp))
             }
             if (isOwn) {
-                Text("···", modifier = Modifier.clickable { menuOpen = true }.padding(4.dp), color = TextMuted)
+                Text("···", modifier = Modifier.clickable { menuOpen = true }.padding(4.dp), color = MaterialTheme.colorScheme.appMuted)
                 androidx.compose.material3.DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
                     androidx.compose.material3.DropdownMenuItem(
                         text = { Text(stringResource(R.string.edit_comment)) },
@@ -644,14 +645,14 @@ fun ProfileScreen(
                             Text(
                                 user.email,
                                 style = MaterialTheme.typography.bodyMedium,
-                                color = TextMuted,
+                                color = MaterialTheme.colorScheme.appMuted,
                                 modifier = Modifier.padding(top = 6.dp)
                             )
                         }
                         Text(
                             user.username,
                             style = MaterialTheme.typography.labelMedium,
-                            color = TextMuted,
+                            color = MaterialTheme.colorScheme.appMuted,
                             modifier = Modifier.padding(top = 4.dp)
                         )
                         Spacer(modifier = Modifier.height(12.dp))
@@ -676,7 +677,7 @@ fun ProfileScreen(
                             Text(
                                 user.bio,
                                 style = MaterialTheme.typography.bodyMedium,
-                                color = TextMuted,
+                                color = MaterialTheme.colorScheme.appMuted,
                                 modifier = Modifier.padding(top = 12.dp)
                             )
                         }
@@ -754,7 +755,7 @@ private fun exploreColumnCount(screenWidthDp: Int): Int = when {
 private fun ProfileStat(value: String, label: String) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text(value, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleLarge)
-        Text(label, style = MaterialTheme.typography.labelSmall, color = TextMuted, modifier = Modifier.padding(top = 2.dp))
+        Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.appMuted, modifier = Modifier.padding(top = 2.dp))
     }
 }
 

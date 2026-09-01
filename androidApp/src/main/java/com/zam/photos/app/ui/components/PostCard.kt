@@ -41,9 +41,11 @@ import androidx.compose.ui.unit.dp
 import com.zam.photos.app.R
 import com.zam.photos.app.data.Post
 import com.zam.photos.app.ui.theme.InkSecondary
-import com.zam.photos.app.ui.theme.SurfaceWarm
 import com.zam.photos.app.ui.theme.Terracotta
-import com.zam.photos.app.ui.theme.TextMuted
+import com.zam.photos.app.ui.theme.appBorder
+import com.zam.photos.app.ui.theme.appMuted
+import com.zam.photos.app.ui.theme.appPlaceholder
+import com.zam.photos.app.ui.theme.appSurfaceWarm
 
 @Composable
 fun PostCard(
@@ -72,7 +74,7 @@ fun PostCard(
             Avatar(name = post.author.name, imageUrl = post.author.profileImageUrl.takeIf { it.isNotBlank() }, size = 40.dp)
             Column(modifier = Modifier.padding(start = 10.dp).weight(1f)) {
                 Text(post.author.name, fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.titleMedium)
-                Text(post.createdAt, style = MaterialTheme.typography.labelMedium, color = TextMuted)
+                Text(post.createdAt, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.appMuted)
             }
             PostOverflowMenu(canDelete = canDelete, onDeleteClick = onDeleteClick)
         }
@@ -84,7 +86,7 @@ fun PostCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(120.dp)
-                    .background(SurfaceWarm),
+                    .background(MaterialTheme.colorScheme.appSurfaceWarm),
                 contentAlignment = Alignment.Center
             ) {
                 Text(
@@ -120,7 +122,7 @@ fun PostCard(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(8.dp)
-                .background(SurfaceWarm)
+                .background(MaterialTheme.colorScheme.appSurfaceWarm)
         )
     }
 }
@@ -130,7 +132,7 @@ fun PostOverflowMenu(canDelete: Boolean, onDeleteClick: () -> Unit) {
     var expanded by remember { mutableStateOf(false) }
     Box {
         IconButton(onClick = { expanded = true }, modifier = Modifier.size(24.dp)) {
-            Icon(Icons.Default.MoreVert, contentDescription = stringResource(R.string.post_menu), tint = TextMuted, modifier = Modifier.size(18.dp))
+            Icon(Icons.Default.MoreVert, contentDescription = stringResource(R.string.post_menu), tint = MaterialTheme.colorScheme.appMuted, modifier = Modifier.size(18.dp))
         }
         DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
             if (canDelete) {

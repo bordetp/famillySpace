@@ -74,6 +74,7 @@ data class NewConversationUiState(
 
 data class SettingsUiState(
     val pushEnabled: Boolean = true,
+    val themeMode: com.zam.photos.app.ui.theme.ThemeMode = com.zam.photos.app.ui.theme.ThemeMode.SYSTEM,
     val family: com.zam.photos.app.data.FamilyCircle? = null,
     val familyName: String = "",
     val inviteCode: String = "",

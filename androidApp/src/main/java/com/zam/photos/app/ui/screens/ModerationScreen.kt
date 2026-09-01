@@ -58,9 +58,11 @@ import com.zam.photos.app.data.Post
 import com.zam.photos.app.data.UserProfile
 import com.zam.photos.app.ui.components.EmptyState
 import com.zam.photos.app.ui.components.RefreshOnResume
-import com.zam.photos.app.ui.theme.BorderLight
 import com.zam.photos.app.ui.theme.Terracotta
-import com.zam.photos.app.ui.theme.TextMuted
+import com.zam.photos.app.ui.theme.appBorder
+import com.zam.photos.app.ui.theme.appMuted
+import com.zam.photos.app.ui.theme.appPlaceholder
+import com.zam.photos.app.ui.theme.appSurfaceWarm
 import com.zam.photos.app.viewmodel.ModerationTab
 import com.zam.photos.app.viewmodel.ModerationViewModel
 import org.koin.androidx.compose.koinViewModel
@@ -84,7 +86,7 @@ fun ModerationScreen(
                 }
             }
         )
-        HorizontalDivider(color = BorderLight)
+        HorizontalDivider(color = MaterialTheme.colorScheme.appBorder)
 
         ScrollableTabRow(
             selectedTabIndex = when (state.tab) {
@@ -117,7 +119,7 @@ fun ModerationScreen(
                 text = { Text(stringResource(R.string.moderation_comments_tab, state.commentsTotal)) }
             )
         }
-        HorizontalDivider(color = BorderLight)
+        HorizontalDivider(color = MaterialTheme.colorScheme.appBorder)
 
         state.error?.let {
             Text(
@@ -258,7 +260,7 @@ private fun ModerationUserRow(
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(user.name, fontWeight = FontWeight.SemiBold)
-                Text(user.email.ifBlank { user.username }, color = TextMuted, style = MaterialTheme.typography.bodySmall)
+                Text(user.email.ifBlank { user.username }, color = MaterialTheme.colorScheme.appMuted, style = MaterialTheme.typography.bodySmall)
             }
             Text(
                 text = when {
@@ -271,7 +273,7 @@ private fun ModerationUserRow(
                     isAdminAccount -> Terracotta
                     user.isPending -> Terracotta
                     user.isRejected -> MaterialTheme.colorScheme.error
-                    else -> TextMuted
+                    else -> MaterialTheme.colorScheme.appMuted
                 },
                 style = MaterialTheme.typography.labelMedium,
                 fontWeight = FontWeight.Medium
@@ -347,7 +349,7 @@ private fun ModerationPostRow(
                 Text(post.author.name, fontWeight = FontWeight.SemiBold)
                 Text(
                     text = post.author.email.ifBlank { post.author.username },
-                    color = TextMuted,
+                    color = MaterialTheme.colorScheme.appMuted,
                     style = MaterialTheme.typography.bodySmall
                 )
             }
@@ -387,7 +389,7 @@ private fun ModerationPostRow(
         Spacer(modifier = Modifier.height(8.dp))
         Text(
             text = stringResource(R.string.moderation_meta, post.likes, post.comments, post.createdAt),
-            color = TextMuted,
+            color = MaterialTheme.colorScheme.appMuted,
             style = MaterialTheme.typography.bodySmall
         )
     }
@@ -412,7 +414,7 @@ private fun ModerationCommentRow(
                 Text(comment.author.name, fontWeight = FontWeight.SemiBold)
                 Text(
                     text = comment.author.email.ifBlank { comment.author.username },
-                    color = TextMuted,
+                    color = MaterialTheme.colorScheme.appMuted,
                     style = MaterialTheme.typography.bodySmall
                 )
             }
@@ -436,7 +438,7 @@ private fun ModerationCommentRow(
             style = MaterialTheme.typography.bodyMedium
         )
         Spacer(modifier = Modifier.height(4.dp))
-        Text(comment.createdAt, color = TextMuted, style = MaterialTheme.typography.bodySmall)
+        Text(comment.createdAt, color = MaterialTheme.colorScheme.appMuted, style = MaterialTheme.typography.bodySmall)
         TextButton(onClick = onOpenPost) {
             Text(stringResource(R.string.moderation_open_post))
         }

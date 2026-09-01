@@ -1,5 +1,7 @@
 package com.zam.photos.app.ui.screens
 
+import android.Manifest
+import android.content.pm.PackageManager
 import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
@@ -28,13 +30,17 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.outlined.AddPhotoAlternate
 import androidx.compose.material.icons.outlined.ChevronRight
 import androidx.compose.material.icons.outlined.Groups
+import androidx.compose.material.icons.outlined.PhotoCamera
+import androidx.compose.material.icons.outlined.PhotoLibrary
 import androidx.compose.material.icons.outlined.Place
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -51,17 +57,21 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
+import androidx.core.content.ContextCompat
+import androidx.core.content.FileProvider
 import coil.compose.AsyncImage
 import com.zam.photos.app.R
 import com.zam.photos.app.ui.components.AdaptivePostImage
-import com.zam.photos.app.ui.theme.BorderLight
 import com.zam.photos.app.ui.theme.BorderStripe
-import com.zam.photos.app.ui.theme.SurfaceWarm
 import com.zam.photos.app.ui.theme.Terracotta
-import com.zam.photos.app.ui.theme.TextMuted
-import com.zam.photos.app.ui.theme.TextPlaceholder
+import com.zam.photos.app.ui.theme.appBorder
+import com.zam.photos.app.ui.theme.appMuted
+import com.zam.photos.app.ui.theme.appPlaceholder
+import com.zam.photos.app.ui.theme.appSurfaceWarm
 import com.zam.photos.app.viewmodel.CreatePostViewModel
 import org.koin.androidx.compose.koinViewModel
+import java.io.File
 
 @Composable
 fun CreatePostScreen(
@@ -72,25 +82,107 @@ fun CreatePostScreen(
     var content by remember { mutableStateOf("") }
     var imageUri by remember { mutableStateOf<Uri?>(null) }
     var uploadedImageUrl by remember { mutableStateOf<String?>(null) }
+    var showPhotoSourceDialog by remember { mutableStateOf(false) }
+    var cameraError by remember { mutableStateOf<String?>(null) }
+    var pendingCameraUri by remember { mutableStateOf<Uri?>(null) }
     val state by viewModel.state.collectAsState()
     val context = LocalContext.current
     val previewMaxHeight = (LocalConfiguration.current.screenHeightDp * 0.45f).dp
 
+    fun processMediaUri(uri: Uri) {
+        imageUri = uri
+        uploadedImageUrl = null
+        val bytes = context.contentResolver.openInputStream(uri)?.readBytes() ?: return
+        val mime = context.contentResolver.getType(uri).orEmpty()
+        val filename = if (mime.startsWith("video")) {
+            "video_${System.currentTimeMillis()}.mp4"
+        } else {
+            "photo_${System.currentTimeMillis()}.jpg"
+        }
+        viewModel.uploadImage(bytes, filename) { url ->
+            uploadedImageUrl = url
+        }
+    }
+
     val photoPicker = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia()
     ) { uri ->
-        imageUri = uri
-        uploadedImageUrl = null
-        uri?.let {
-            val bytes = context.contentResolver.openInputStream(it)?.readBytes() ?: return@let
-            val mime = context.contentResolver.getType(it).orEmpty()
-            val filename = if (mime.startsWith("video")) {
-                "video_${System.currentTimeMillis()}.mp4"
-            } else {
-                "photo_${System.currentTimeMillis()}.jpg"
+        uri?.let(::processMediaUri)
+    }
+
+    val takePicture = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.TakePicture()
+    ) { success ->
+        val uri = pendingCameraUri
+        pendingCameraUri = null
+        if (success && uri != null) {
+            processMediaUri(uri)
+        }
+    }
+
+    val cameraPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        if (granted) {
+            val uri = createCameraImageUri(context)
+            pendingCameraUri = uri
+            takePicture.launch(uri)
+        } else {
+            cameraError = context.getString(R.string.camera_permission_denied)
+        }
+    }
+
+    fun openCamera() {
+        cameraError = null
+        when {
+            ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED -> {
+                val uri = createCameraImageUri(context)
+                pendingCameraUri = uri
+                takePicture.launch(uri)
             }
-            viewModel.uploadImage(bytes, filename) { url ->
-                uploadedImageUrl = url
+            else -> cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+        }
+    }
+
+    fun openPhotoSourcePicker() {
+        showPhotoSourceDialog = true
+    }
+
+    if (showPhotoSourceDialog) {
+        Dialog(onDismissRequest = { showPhotoSourceDialog = false }) {
+            Surface(shape = RoundedCornerShape(16.dp)) {
+                Column(modifier = Modifier.padding(20.dp)) {
+                    Text(
+                        text = stringResource(R.string.choose_photo_source),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    TextButton(
+                        onClick = {
+                            showPhotoSourceDialog = false
+                            photoPicker.launch(
+                                PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageAndVideo)
+                            )
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Icon(Icons.Outlined.PhotoLibrary, contentDescription = null)
+                        Spacer(modifier = Modifier.size(12.dp))
+                        Text(stringResource(R.string.choose_gallery))
+                    }
+                    TextButton(
+                        onClick = {
+                            showPhotoSourceDialog = false
+                            openCamera()
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Icon(Icons.Outlined.PhotoCamera, contentDescription = null)
+                        Spacer(modifier = Modifier.size(12.dp))
+                        Text(stringResource(R.string.choose_camera))
+                    }
+                }
             }
         }
     }
@@ -124,7 +216,7 @@ fun CreatePostScreen(
                 }
             )
         }
-        HorizontalDivider(color = BorderLight)
+        HorizontalDivider(color = MaterialTheme.colorScheme.appBorder)
 
         Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
             if (imageUri != null || uploadedImageUrl != null) {
@@ -144,15 +236,13 @@ fun CreatePostScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(previewMaxHeight)
-                        .background(SurfaceWarm)
-                        .clickable {
-                            photoPicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageAndVideo))
-                        },
+                        .background(MaterialTheme.colorScheme.appSurfaceWarm)
+                        .clickable { openPhotoSourcePicker() },
                     contentAlignment = Alignment.Center
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(10.dp)) {
                         Icon(Icons.Outlined.AddPhotoAlternate, contentDescription = null, modifier = Modifier.size(30.dp), tint = TextPlaceholder)
-                        Text(stringResource(R.string.add_photo), color = TextPlaceholder, style = MaterialTheme.typography.labelMedium)
+                        Text(stringResource(R.string.add_photo), color = MaterialTheme.colorScheme.appPlaceholder, style = MaterialTheme.typography.labelMedium)
                     }
                 }
             }
@@ -177,9 +267,7 @@ fun CreatePostScreen(
                         .size(56.dp)
                         .clip(RoundedCornerShape(8.dp))
                         .border(1.5.dp, BorderStripe, RoundedCornerShape(8.dp))
-                        .clickable {
-                            photoPicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageAndVideo))
-                        },
+                        .clickable { openPhotoSourcePicker() },
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(Icons.Filled.Add, contentDescription = null, tint = TextPlaceholder, modifier = Modifier.size(18.dp))
@@ -195,13 +283,13 @@ fun CreatePostScreen(
                 textStyle = MaterialTheme.typography.bodyLarge.copy(color = MaterialTheme.colorScheme.onSurface),
                 decorationBox = { inner ->
                     if (content.isEmpty()) {
-                        Text(stringResource(R.string.post_hint), color = TextMuted)
+                        Text(stringResource(R.string.post_hint), color = MaterialTheme.colorScheme.appMuted)
                     }
                     inner()
                 }
             )
 
-            HorizontalDivider(color = BorderLight, modifier = Modifier.padding(horizontal = 22.dp))
+            HorizontalDivider(color = MaterialTheme.colorScheme.appBorder, modifier = Modifier.padding(horizontal = 22.dp))
 
             Row(
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 22.dp, vertical = 14.dp),
@@ -210,7 +298,7 @@ fun CreatePostScreen(
                 Icon(Icons.Outlined.Groups, contentDescription = null, modifier = Modifier.size(18.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
                 Spacer(modifier = Modifier.size(12.dp))
                 Text(stringResource(R.string.audience_all), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
-                Icon(Icons.Outlined.ChevronRight, contentDescription = null, tint = TextMuted, modifier = Modifier.size(16.dp))
+                Icon(Icons.Outlined.ChevronRight, contentDescription = null, tint = MaterialTheme.colorScheme.appMuted, modifier = Modifier.size(16.dp))
             }
 
             Row(
@@ -219,7 +307,7 @@ fun CreatePostScreen(
             ) {
                 Icon(Icons.Outlined.Place, contentDescription = null, modifier = Modifier.size(18.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
                 Spacer(modifier = Modifier.size(12.dp))
-                Text(stringResource(R.string.add_location), style = MaterialTheme.typography.bodyLarge, color = TextMuted, modifier = Modifier.weight(1f))
+                Text(stringResource(R.string.add_location), style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.appMuted, modifier = Modifier.weight(1f))
             }
 
             if (state.isUploading || state.isLoading) {
@@ -229,9 +317,15 @@ fun CreatePostScreen(
                 )
             }
 
-            state.error?.let {
+            (state.error ?: cameraError)?.let {
                 Text(it, color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(horizontal = 22.dp))
             }
         }
     }
+}
+
+private fun createCameraImageUri(context: android.content.Context): Uri {
+    val directory = File(context.cacheDir, "camera").apply { mkdirs() }
+    val file = File(directory, "photo_${System.currentTimeMillis()}.jpg")
+    return FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
 }

@@ -33,6 +33,10 @@
     <string name="share">Publier</string>
     <string name="post_hint">Raconte ce moment…</string>
     <string name="add_photo">Ajouter photo ou vidéo</string>
+    <string name="choose_photo_source">Ajouter une photo</string>
+    <string name="choose_gallery">Galerie</string>
+    <string name="choose_camera">Appareil photo</string>
+    <string name="camera_permission_denied">Autorisation caméra refusée</string>
     <string name="audience_all">Toute la famille</string>
     <string name="add_location">Ajouter un lieu</string>
     <string name="post">Publier</string>
@@ -53,6 +57,10 @@
     <string name="notifications_empty">Aucune notification</string>
     <string name="notifications_empty_subtitle">Les activités de votre famille apparaîtront ici</string>
     <string name="settings">Paramètres</string>
+    <string name="settings_appearance">Apparence</string>
+    <string name="theme_light">Clair</string>
+    <string name="theme_dark">Sombre</string>
+    <string name="theme_system">Système</string>
     <string name="privacy_policy_url">https://bordetp.github.io/famillySpace/privacy-policy.html</string>
     <string name="post_menu">Options de la publication</string>
     <string name="delete_post">Supprimer la publication</string>

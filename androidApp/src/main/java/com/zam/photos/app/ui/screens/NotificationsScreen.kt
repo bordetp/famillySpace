@@ -46,10 +46,10 @@ import com.zam.photos.app.ui.components.Avatar
 import com.zam.photos.app.ui.components.EmptyState
 import com.zam.photos.app.ui.components.RefreshOnResume
 import com.zam.photos.app.di.activityKoinViewModel
-import com.zam.photos.app.ui.theme.BorderLight
-import com.zam.photos.app.ui.theme.SurfaceWarm
 import com.zam.photos.app.ui.theme.Terracotta
-import com.zam.photos.app.ui.theme.TextMuted
+import com.zam.photos.app.ui.theme.appBorder
+import com.zam.photos.app.ui.theme.appMuted
+import com.zam.photos.app.ui.theme.appUnread
 import com.zam.photos.app.viewmodel.NotificationsViewModel
 
 @Composable
@@ -83,7 +83,7 @@ fun NotificationsScreen(
                 modifier = Modifier.padding(start = 4.dp)
             )
         }
-        HorizontalDivider(color = BorderLight)
+        HorizontalDivider(color = MaterialTheme.colorScheme.appBorder)
 
         if (state.notifications.isEmpty()) {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -120,7 +120,7 @@ private fun NotificationRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(if (notification.isRead) MaterialTheme.colorScheme.surface else SurfaceWarm)
+            .background(if (notification.isRead) MaterialTheme.colorScheme.surface else MaterialTheme.colorScheme.appUnread)
             .clickable(onClick = onClick)
             .padding(horizontal = 22.dp, vertical = 14.dp),
         verticalAlignment = Alignment.Top
@@ -145,14 +145,14 @@ private fun NotificationRow(
             Text(
                 notification.timeAgo,
                 style = MaterialTheme.typography.labelSmall,
-                color = TextMuted,
+                color = MaterialTheme.colorScheme.appMuted,
                 modifier = Modifier.padding(top = 4.dp)
             )
         }
         Spacer(modifier = Modifier.width(8.dp))
         NotificationTypeIcon(type = notification.type)
     }
-    HorizontalDivider(color = BorderLight, modifier = Modifier.padding(start = 78.dp))
+    HorizontalDivider(color = MaterialTheme.colorScheme.appBorder, modifier = Modifier.padding(start = 78.dp))
 }
 
 @Composable

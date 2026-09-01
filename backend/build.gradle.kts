@@ -47,6 +47,8 @@ dependencies {
 
     implementation("com.google.firebase:firebase-admin:9.2.0")
 
+    implementation("com.google.guava:guava:32.1.1-jre")
+
     testImplementation(kotlin("test"))
     testImplementation("io.ktor:ktor-server-tests-jvm:$ktorVersion")
 }

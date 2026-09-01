@@ -4,8 +4,10 @@ import com.zam.backend.AppConfig
 import com.zam.backend.repository.CommentRepository
 import com.zam.backend.repository.PostRepository
 import com.zam.backend.repository.UserRepository
+import com.zam.backend.repository.toDto
 import com.zam.shared.CommentDto
 import com.zam.shared.PostDto
+import com.zam.shared.UserDto
 import java.util.UUID
 
 class AdminService(

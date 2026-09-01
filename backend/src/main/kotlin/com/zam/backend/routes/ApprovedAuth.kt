@@ -7,7 +7,7 @@ import io.ktor.server.auth.authenticate
 import io.ktor.server.auth.jwt.JWTPrincipal
 import io.ktor.server.auth.principal
 import io.ktor.server.routing.Route
-import io.ktor.server.routing.intercept
+import io.ktor.util.pipeline.intercept
 
 fun Route.authenticateApproved(authService: AuthService, build: Route.() -> Unit) {
     authenticate("auth-jwt") {

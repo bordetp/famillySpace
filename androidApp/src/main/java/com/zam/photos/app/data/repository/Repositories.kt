@@ -482,7 +482,7 @@ class AdminRepository(private val client: HttpClient) {
                 val page = response.body<PostsPageResponse>()
                 ApiResult.Success(PostRepository.FeedPage(page.posts.map { it.toUiPost() }, page.total))
             } else {
-                ApiResult.Error(parseError(response.bodyAsText()))
+                ApiResult.Error(parseHttpError(response))
             }
         } catch (e: Exception) {
             ApiResult.Error(e.message ?: "Network error")
@@ -507,7 +507,7 @@ class AdminRepository(private val client: HttpClient) {
                 val page = response.body<com.zam.shared.CommentsPageResponse>()
                 ApiResult.Success(page.comments.map { it.toUiComment() } to page.total)
             } else {
-                ApiResult.Error(parseError(response.bodyAsText()))
+                ApiResult.Error(parseHttpError(response))
             }
         } catch (e: Exception) {
             ApiResult.Error(e.message ?: "Network error")
@@ -533,7 +533,7 @@ class AdminRepository(private val client: HttpClient) {
                 val page = response.body<com.zam.shared.UsersPageResponse>()
                 ApiResult.Success(page.users.map { it.toProfile() } to page.total)
             } else {
-                ApiResult.Error(parseError(response.bodyAsText()))
+                ApiResult.Error(parseHttpError(response))
             }
         } catch (e: Exception) {
             ApiResult.Error(e.message ?: "Network error")
@@ -548,7 +548,7 @@ class AdminRepository(private val client: HttpClient) {
             if (response.status.isSuccess()) {
                 ApiResult.Success(response.body<com.zam.shared.UserDto>().toProfile())
             } else {
-                ApiResult.Error(parseError(response.bodyAsText()))
+                ApiResult.Error(parseHttpError(response))
             }
         } catch (e: Exception) {
             ApiResult.Error(e.message ?: "Network error")
@@ -560,7 +560,24 @@ private suspend fun emptyResult(response: io.ktor.client.statement.HttpResponse)
     return if (response.status.isSuccess() || response.status.value == 204) {
         ApiResult.Success(Unit)
     } else {
-        ApiResult.Error(parseError(response.bodyAsText()))
+        ApiResult.Error(parseHttpError(response))
+    }
+}
+
+private suspend fun parseHttpError(response: io.ktor.client.statement.HttpResponse): String {
+    val body = response.bodyAsText()
+    if (body.isNotBlank()) {
+        return try {
+            kotlinx.serialization.json.Json.decodeFromString<ErrorResponse>(body).error
+        } catch (_: Exception) {
+            "Request failed"
+        }
+    }
+    return when (response.status.value) {
+        401 -> "Session expirée"
+        403 -> "Accès non autorisé"
+        404 -> "Service modération indisponible (API non déployée)"
+        else -> "Erreur serveur (${response.status.value})"
     }
 }
 

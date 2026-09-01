@@ -12,7 +12,6 @@ import com.zam.photos.app.data.mapper.toUiPost
 import com.zam.photos.app.data.Comment
 import com.zam.photos.app.data.Post
 import com.zam.photos.app.data.UserProfile
-import com.zam.shared.DevAuthRequest
 import com.zam.shared.GoogleAuthRequest
 import com.zam.shared.AuthResponse
 import com.zam.shared.CommentRequest
@@ -62,28 +61,6 @@ class AuthRepository(
             } else {
                 val body = response.bodyAsText()
                 AuthDebugLog.log("API: réponse erreur — ${body.take(120)}")
-                ApiResult.Error(parseError(body))
-            }
-        } catch (e: Exception) {
-            AuthDebugLog.log("API: exception réseau — ${e.message}")
-            ApiResult.Error(e.message ?: "Network error")
-        }
-    }
-
-    suspend fun signInDevBypass(secret: String): ApiResult<Unit> {
-        return try {
-            val response = client.post("/api/auth/dev") {
-                setBody(DevAuthRequest(secret = secret))
-            }
-            AuthDebugLog.log("API: POST /api/auth/dev → HTTP ${response.status.value}")
-            if (response.status.isSuccess()) {
-                val auth: AuthResponse = response.body()
-                tokenStore.saveSession(auth.accessToken, auth.user)
-                AuthDebugLog.log("API: connexion test OK (user=${auth.user.email})")
-                ApiResult.Success(Unit)
-            } else {
-                val body = response.bodyAsText()
-                AuthDebugLog.log("API: dev bypass erreur — ${body.take(120)}")
                 ApiResult.Error(parseError(body))
             }
         } catch (e: Exception) {
@@ -521,6 +498,21 @@ class AdminRepository(private val client: HttpClient) {
             ApiResult.Error(e.message ?: "Network error")
         }
     }
+
+    suspend fun listActiveUsers(limit: Int = 50): ApiResult<Pair<List<UserProfile>, Int>> {
+        val merged = linkedMapOf<String, UserProfile>()
+        for (status in listOf("pending", "approved")) {
+            when (val result = listUsers(status = status, limit = limit)) {
+                is ApiResult.Success -> result.data.first.forEach { merged[it.id] = it }
+                is ApiResult.Error -> return result
+            }
+        }
+        val users = merged.values.toList()
+        return ApiResult.Success(users to users.size)
+    }
+
+    suspend fun listBlockedUsers(limit: Int = 200): ApiResult<Pair<List<UserProfile>, Int>> =
+        listUsers(status = "rejected", limit = limit)
 
     suspend fun listAllUsers(limit: Int = 50): ApiResult<Pair<List<UserProfile>, Int>> {
         val merged = linkedMapOf<String, UserProfile>()

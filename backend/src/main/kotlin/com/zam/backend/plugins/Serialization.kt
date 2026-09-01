@@ -44,8 +44,6 @@ fun Application.configureStatusPages() {
                 "EMAIL_EXISTS" -> HttpStatusCode.Conflict
                 "GOOGLE_NOT_CONFIGURED" -> HttpStatusCode.ServiceUnavailable
                 "INVALID_GOOGLE_TOKEN", "NO_EMAIL" -> HttpStatusCode.Unauthorized
-                "DEV_AUTH_DISABLED" -> HttpStatusCode.NotFound
-                "DEV_AUTH_FORBIDDEN" -> HttpStatusCode.Forbidden
                 else -> HttpStatusCode.Unauthorized
             }
             call.respond(status, ErrorResponse(cause.message ?: "Auth error", cause.code))

@@ -20,8 +20,6 @@ if (localPropertiesFile.exists()) {
 }
 val googleWebClientId = localProperties.getProperty("google.web.client.id")
     ?: "151953099656-rh76ijdiirkka8rqag42k658e1sohcgc.apps.googleusercontent.com"
-val devAuthBypass = localProperties.getProperty("dev.auth.bypass", "false") == "true"
-val devAuthSecret = localProperties.getProperty("dev.auth.secret") ?: "familyspace-internal-test"
 
 android {
     namespace = "com.zam.photos.app"
@@ -31,12 +29,10 @@ android {
         applicationId = "com.zam.photos.app"
         minSdk = property("android.minSdk").toString().toInt()
         targetSdk = property("android.targetSdk").toString().toInt()
-        versionCode = 30
-        versionName = "1.7.10"
+        versionCode = 32
+        versionName = "1.7.12"
         buildConfigField("String", "API_BASE_URL", "\"http://10.0.2.2:8080\"")
         buildConfigField("String", "GOOGLE_WEB_CLIENT_ID", "\"$googleWebClientId\"")
-        buildConfigField("boolean", "DEV_AUTH_BYPASS", devAuthBypass.toString())
-        buildConfigField("String", "DEV_AUTH_SECRET", "\"$devAuthSecret\"")
     }
 
     signingConfigs {

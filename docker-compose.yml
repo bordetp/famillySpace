@@ -28,9 +28,6 @@ services:
       JWT_ISSUER: ${JWT_ISSUER:-familyspace}
       JWT_AUDIENCE: ${JWT_AUDIENCE:-familyspace-users}
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
-      DEV_AUTH_BYPASS: ${DEV_AUTH_BYPASS:-false}
-      DEV_AUTH_SECRET: ${DEV_AUTH_SECRET:-}
-      DEV_AUTH_EMAIL: ${DEV_AUTH_EMAIL:-zamdec2@gmail.com}
       PUBLIC_BASE_URL: ${PUBLIC_BASE_URL:-http://localhost:8080}
       UPLOAD_DIR: /app/uploads
       MAX_UPLOAD_BYTES: ${MAX_UPLOAD_BYTES:-52428800}

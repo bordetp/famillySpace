@@ -4,7 +4,6 @@
     <string name="tagline">Votre cercle familial, en un seul endroit</string>
     <string name="google_sign_in_hint">Connectez-vous avec votre compte Google pour rejoindre Family Space.</string>
     <string name="continue_with_google">Continuer avec Google</string>
-    <string name="dev_bypass_login">Connexion test (zamdec2@gmail.com)</string>
     <string name="google_account">Compte Google</string>
     <string name="connected_with_google">Connecté avec Google</string>
     <string name="nav_home">Accueil</string>
@@ -93,10 +92,13 @@
     <string name="moderation_title">Modération</string>
     <string name="moderation_entry">Modération</string>
     <string name="moderation_users_tab">Connexions (%d)</string>
+    <string name="moderation_blocked_tab">Bloqués (%d)</string>
     <string name="moderation_posts_tab">Publications (%d)</string>
     <string name="moderation_comments_tab">Commentaires (%d)</string>
     <string name="moderation_users_empty">Aucun utilisateur</string>
-    <string name="moderation_users_empty_subtitle">Les comptes et demandes de connexion apparaîtront ici</string>
+    <string name="moderation_users_empty_subtitle">Demandes en attente et comptes connectés de la famille</string>
+    <string name="moderation_blocked_empty">Aucun compte bloqué</string>
+    <string name="moderation_blocked_empty_subtitle">Les comptes refusés ou bloqués apparaîtront ici</string>
     <string name="moderation_posts_empty">Aucune publication</string>
     <string name="moderation_posts_empty_subtitle">Rien à modérer pour le moment</string>
     <string name="moderation_comments_empty">Aucun commentaire</string>

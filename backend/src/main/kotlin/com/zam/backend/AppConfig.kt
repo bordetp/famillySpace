@@ -19,9 +19,6 @@ data class AppConfig(
     val fcmServerKey: String = System.getenv("FCM_SERVER_KEY") ?: "",
     val firebaseAdminJson: String = System.getenv("FIREBASE_ADMIN_JSON") ?: "",
     val googleClientId: String = System.getenv("GOOGLE_CLIENT_ID") ?: "",
-    val devAuthBypass: Boolean = System.getenv("DEV_AUTH_BYPASS")?.equals("true", ignoreCase = true) == true,
-    val devAuthSecret: String = System.getenv("DEV_AUTH_SECRET") ?: "",
-    val devAuthEmail: String = System.getenv("DEV_AUTH_EMAIL") ?: "zamdec2@gmail.com",
     val adminEmail: String = System.getenv("ADMIN_EMAIL") ?: "deceirem@gmail.com",
 ) {
     fun resolveFirebaseAdminJson(): String? {

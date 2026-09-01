@@ -6,7 +6,6 @@ VM_IP="141.253.105.251"
 VM_USER="opc"
 REMOTE_DIR="/home/opc/familyspace"
 GOOGLE_CLIENT_ID="151953099656-rh76ijdiirkka8rqag42k658e1sohcgc.apps.googleusercontent.com"
-DEV_AUTH_SECRET="familyspace-internal-test"
 
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 KEY_PATH="${ORACLE_SSH_KEY:-$HOME/.ssh/oracle.key}"
@@ -65,7 +64,6 @@ if [ -f /etc/letsencrypt/live/famillyspace.duckdns.org/fullchain.pem ]; then
 fi
 
 GOOGLE_ID='${GOOGLE_CLIENT_ID}'
-DEV_AUTH_SECRET='${DEV_AUTH_SECRET}'
 
 if [ ! -f .env ]; then
   JWT_SECRET=\$(openssl rand -hex 32)
@@ -78,9 +76,6 @@ JWT_SECRET=\${JWT_SECRET}
 JWT_ISSUER=familyspace
 JWT_AUDIENCE=familyspace-users
 GOOGLE_CLIENT_ID=\${GOOGLE_ID}
-DEV_AUTH_BYPASS=false
-DEV_AUTH_SECRET=\${DEV_AUTH_SECRET}
-DEV_AUTH_EMAIL=zamdec2@gmail.com
 PUBLIC_BASE_URL=https://famillyspace.duckdns.org
 MAX_UPLOAD_BYTES=52428800
 FIREBASE_ADMIN_JSON=/app/firebase-admin.json
@@ -94,9 +89,6 @@ else
   if grep -q '^PUBLIC_BASE_URL=http://141.253.105.251' .env; then
     sed -i 's|^PUBLIC_BASE_URL=.*|PUBLIC_BASE_URL=https://famillyspace.duckdns.org|' .env
   fi
-  grep -q '^DEV_AUTH_BYPASS=' .env && sed -i 's|^DEV_AUTH_BYPASS=.*|DEV_AUTH_BYPASS=false|' .env || echo 'DEV_AUTH_BYPASS=false' >> .env
-  grep -q '^DEV_AUTH_SECRET=' .env && sed -i "s|^DEV_AUTH_SECRET=.*|DEV_AUTH_SECRET=\${DEV_AUTH_SECRET}|" .env || echo "DEV_AUTH_SECRET=\${DEV_AUTH_SECRET}" >> .env
-  grep -q '^DEV_AUTH_EMAIL=' .env && sed -i 's|^DEV_AUTH_EMAIL=.*|DEV_AUTH_EMAIL=zamdec2@gmail.com|' .env || echo 'DEV_AUTH_EMAIL=zamdec2@gmail.com' >> .env
   grep -q '^MAX_UPLOAD_BYTES=' .env && sed -i 's|^MAX_UPLOAD_BYTES=.*|MAX_UPLOAD_BYTES=52428800|' .env || echo 'MAX_UPLOAD_BYTES=52428800' >> .env
   grep -q '^FIREBASE_ADMIN_JSON=' .env && sed -i 's|^FIREBASE_ADMIN_JSON=.*|FIREBASE_ADMIN_JSON=/app/firebase-admin.json|' .env || echo 'FIREBASE_ADMIN_JSON=/app/firebase-admin.json' >> .env
   grep -q '^ADMIN_EMAIL=' .env && sed -i 's|^ADMIN_EMAIL=.*|ADMIN_EMAIL=deceirem@gmail.com|' .env || echo 'ADMIN_EMAIL=deceirem@gmail.com' >> .env

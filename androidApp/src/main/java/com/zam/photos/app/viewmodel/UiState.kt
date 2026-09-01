@@ -87,14 +87,16 @@ data class PostDetailUiState(
     val error: String? = null
 )
 
-enum class ModerationTab { Users, Posts, Comments }
+enum class ModerationTab { Users, Blocked, Posts, Comments }
 
 data class ModerationUiState(
     val tab: ModerationTab = ModerationTab.Users,
     val users: List<com.zam.photos.app.data.UserProfile> = emptyList(),
+    val blockedUsers: List<com.zam.photos.app.data.UserProfile> = emptyList(),
     val posts: List<com.zam.photos.app.data.Post> = emptyList(),
     val comments: List<com.zam.photos.app.data.Comment> = emptyList(),
     val usersTotal: Int = 0,
+    val blockedUsersTotal: Int = 0,
     val postsTotal: Int = 0,
     val commentsTotal: Int = 0,
     val isLoading: Boolean = true,

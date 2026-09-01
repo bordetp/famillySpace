@@ -43,11 +43,6 @@ data class GoogleAuthRequest(
 )
 
 @Serializable
-data class DevAuthRequest(
-    val secret: String
-)
-
-@Serializable
 data class AuthResponse(
     val accessToken: String,
     val userId: String,

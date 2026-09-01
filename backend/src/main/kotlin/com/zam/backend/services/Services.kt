@@ -21,7 +21,7 @@ class AuthService(
         val profile = googleIdTokenService.verify(request.idToken)
 
         val existingByGoogle = userRepository.findByGoogleId(profile.googleId)
-        var user = when {
+        val user = when {
             existingByGoogle != null -> userRepository.syncGoogleProfile(
                 userId = existingByGoogle.id,
                 displayName = profile.displayName,
@@ -32,15 +32,29 @@ class AuthService(
                 val existingByEmail = userRepository.findByEmail(profile.email)
                 when {
                     existingByEmail != null -> {
-                        if (existingByEmail.googleId != null && existingByEmail.googleId != profile.googleId) {
+                        val storedGoogleId = existingByEmail.googleId
+                        if (
+                            storedGoogleId != null &&
+                            storedGoogleId != profile.googleId &&
+                            !storedGoogleId.startsWith("dev-bypass:")
+                        ) {
                             throw AuthException("Email already linked to another account", "EMAIL_EXISTS")
                         }
-                        userRepository.linkGoogleAccount(
-                            userId = existingByEmail.id,
-                            googleId = profile.googleId,
-                            displayName = profile.displayName,
-                            avatarUrl = profile.avatarUrl
-                        )
+                        if (storedGoogleId == null || storedGoogleId != profile.googleId) {
+                            userRepository.linkGoogleAccount(
+                                userId = existingByEmail.id,
+                                googleId = profile.googleId,
+                                displayName = profile.displayName,
+                                avatarUrl = profile.avatarUrl
+                            )
+                        } else {
+                            userRepository.syncGoogleProfile(
+                                userId = existingByEmail.id,
+                                displayName = profile.displayName,
+                                avatarUrl = profile.avatarUrl,
+                                email = profile.email
+                            )
+                        }
                     }
                     else -> userRepository.createFromGoogle(
                         googleId = profile.googleId,
@@ -54,33 +68,8 @@ class AuthService(
             }
         }
 
-        user = ensureAdminApproved(user)
-        return buildAuthResponse(user)
-    }
-
-    fun devSignIn(secret: String): AuthResponse {
-        if (!config.devAuthBypass) {
-            throw AuthException("Not found", "DEV_AUTH_DISABLED")
-        }
-        if (config.devAuthSecret.isBlank() || secret != config.devAuthSecret) {
-            throw AuthException("Forbidden", "DEV_AUTH_FORBIDDEN")
-        }
-
-        val email = config.devAuthEmail.trim().lowercase()
-        val displayName = email.substringBefore('@')
-            .replace('.', ' ')
-            .replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
-
-        var user = userRepository.findByEmail(email) ?: userRepository.createFromGoogle(
-            googleId = "dev-bypass:$email",
-            email = email,
-            username = uniqueUsernameFromEmail(email),
-            displayName = displayName,
-            avatarUrl = null,
-            approvalStatus = initialApprovalStatus(email)
-        )
-        user = ensureAdminApproved(user)
-        return buildAuthResponse(user)
+        val approvedUser = ensureAdminApproved(user)
+        return buildAuthResponse(approvedUser)
     }
 
     fun me(userId: UUID): UserDto {
@@ -136,15 +125,6 @@ class AuthService(
             userId = user.id.toString(),
             user = user.toDto()
         )
-    }
-
-    private fun uniqueUsernameFromEmail(email: String): String {
-        val base = sanitizeUsername(email.substringBefore('@')).ifBlank { "user" }
-        if (!userRepository.usernameExists(base)) {
-            return base
-        }
-        val suffix = email.hashCode().toUInt().toString(16).take(8)
-        return "${base}_$suffix".take(64)
     }
 
     private fun uniqueUsername(profile: GoogleProfile): String {

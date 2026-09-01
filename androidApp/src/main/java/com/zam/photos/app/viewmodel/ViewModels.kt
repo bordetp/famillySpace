@@ -106,25 +106,6 @@ class AuthViewModel(
     fun clearError() {
         _state.value = _state.value.copy(error = null)
     }
-
-    fun devBypassLogin(onSuccess: () -> Unit) {
-        if (!BuildConfig.DEV_AUTH_BYPASS) return
-        viewModelScope.launch {
-            AuthDebugLog.log("Auth: connexion test (bypass dev)…")
-            _state.value = AuthUiState(isLoading = true, error = null)
-            when (val result = authRepository.signInDevBypass(BuildConfig.DEV_AUTH_SECRET)) {
-                is com.zam.photos.app.data.repository.ApiResult.Success -> {
-                    AuthDebugLog.log("Auth: bypass OK — navigation feed")
-                    _state.value = AuthUiState()
-                    onSuccess()
-                }
-                is com.zam.photos.app.data.repository.ApiResult.Error -> {
-                    AuthDebugLog.log("Auth: bypass ERREUR — ${result.message}")
-                    _state.value = AuthUiState(error = result.message)
-                }
-            }
-        }
-    }
 }
 
 class FeedViewModel(
@@ -468,6 +449,7 @@ class ModerationViewModel(
             _state.value = _state.value.copy(isLoading = true, error = null)
             when (_state.value.tab) {
                 ModerationTab.Users -> loadUsers()
+                ModerationTab.Blocked -> loadBlockedUsers()
                 ModerationTab.Posts -> loadPosts()
                 ModerationTab.Comments -> loadComments()
             }
@@ -475,10 +457,10 @@ class ModerationViewModel(
     }
 
     private suspend fun loadUsers() {
-        when (val result = adminRepository.listAllUsers()) {
+        when (val result = adminRepository.listActiveUsers()) {
             is com.zam.photos.app.data.repository.ApiResult.Success -> {
                 _state.value = _state.value.copy(
-                    users = sortUsersForModeration(result.data.first),
+                    users = sortActiveUsers(result.data.first),
                     usersTotal = result.data.second,
                     isLoading = false
                 )
@@ -489,15 +471,33 @@ class ModerationViewModel(
         }
     }
 
-    private fun sortUsersForModeration(users: List<com.zam.photos.app.data.UserProfile>): List<com.zam.photos.app.data.UserProfile> {
-        val priority = mapOf("pending" to 0, "approved" to 1, "rejected" to 2)
+    private suspend fun loadBlockedUsers() {
+        when (val result = adminRepository.listBlockedUsers()) {
+            is com.zam.photos.app.data.repository.ApiResult.Success -> {
+                _state.value = _state.value.copy(
+                    blockedUsers = sortBlockedUsers(result.data.first),
+                    blockedUsersTotal = result.data.second,
+                    isLoading = false
+                )
+            }
+            is com.zam.photos.app.data.repository.ApiResult.Error -> {
+                _state.value = _state.value.copy(isLoading = false, error = result.message)
+            }
+        }
+    }
+
+    private fun sortActiveUsers(users: List<com.zam.photos.app.data.UserProfile>): List<com.zam.photos.app.data.UserProfile> {
+        val priority = mapOf("pending" to 0, "approved" to 1)
         return users.sortedWith(
             compareBy(
-                { priority[it.approvalStatus.lowercase()] ?: 3 },
+                { priority[it.approvalStatus.lowercase()] ?: 2 },
                 { it.name.lowercase() }
             )
         )
     }
+
+    private fun sortBlockedUsers(users: List<com.zam.photos.app.data.UserProfile>): List<com.zam.photos.app.data.UserProfile> =
+        users.sortedBy { it.name.lowercase() }
 
     private suspend fun loadPosts() {
         when (val result = adminRepository.listPosts()) {
@@ -574,11 +574,22 @@ class ModerationViewModel(
             _state.value = _state.value.copy(deletingId = userId, error = null)
             when (val result = adminRepository.setUserApproval(userId, status)) {
                 is com.zam.photos.app.data.repository.ApiResult.Success -> {
-                    val updatedUsers = sortUsersForModeration(
-                        _state.value.users.map { if (it.id == userId) result.data else it }
+                    val updated = result.data
+                    val users = sortActiveUsers(
+                        _state.value.users.filterNot { it.id == userId }.let {
+                            if (updated.isRejected) it else it + updated
+                        }
+                    )
+                    val blockedUsers = sortBlockedUsers(
+                        _state.value.blockedUsers.filterNot { it.id == userId }.let {
+                            if (updated.isRejected) it + updated else it
+                        }
                     )
                     _state.value = _state.value.copy(
-                        users = updatedUsers,
+                        users = users,
+                        usersTotal = users.size,
+                        blockedUsers = blockedUsers,
+                        blockedUsersTotal = blockedUsers.size,
                         deletingId = null
                     )
                 }

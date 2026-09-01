@@ -23,6 +23,7 @@ import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Article
+import androidx.compose.material.icons.outlined.Block
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -88,8 +89,9 @@ fun ModerationScreen(
         ScrollableTabRow(
             selectedTabIndex = when (state.tab) {
                 ModerationTab.Users -> 0
-                ModerationTab.Posts -> 1
-                ModerationTab.Comments -> 2
+                ModerationTab.Blocked -> 1
+                ModerationTab.Posts -> 2
+                ModerationTab.Comments -> 3
             },
             edgePadding = 16.dp,
             divider = {}
@@ -98,6 +100,11 @@ fun ModerationScreen(
                 selected = state.tab == ModerationTab.Users,
                 onClick = { viewModel.selectTab(ModerationTab.Users) },
                 text = { Text(stringResource(R.string.moderation_users_tab, state.usersTotal)) }
+            )
+            Tab(
+                selected = state.tab == ModerationTab.Blocked,
+                onClick = { viewModel.selectTab(ModerationTab.Blocked) },
+                text = { Text(stringResource(R.string.moderation_blocked_tab, state.blockedUsersTotal)) }
             )
             Tab(
                 selected = state.tab == ModerationTab.Posts,
@@ -137,6 +144,17 @@ fun ModerationScreen(
                 )
             }
 
+            state.tab == ModerationTab.Blocked && state.blockedUsers.isEmpty() -> Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                EmptyState(
+                    icon = Icons.Outlined.Block,
+                    title = stringResource(R.string.moderation_blocked_empty),
+                    subtitle = stringResource(R.string.moderation_blocked_empty_subtitle)
+                )
+            }
+
             state.tab == ModerationTab.Posts && state.posts.isEmpty() -> Box(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
@@ -164,6 +182,20 @@ fun ModerationScreen(
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 items(state.users, key = { it.id }) { user ->
+                    ModerationUserRow(
+                        user = user,
+                        isBusy = state.deletingId == user.id,
+                        onApprove = { viewModel.approveUser(user.id) },
+                        onReject = { viewModel.rejectUser(user.id) }
+                    )
+                }
+            }
+
+            state.tab == ModerationTab.Blocked -> LazyColumn(
+                contentPadding = PaddingValues(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                items(state.blockedUsers, key = { it.id }) { user ->
                     ModerationUserRow(
                         user = user,
                         isBusy = state.deletingId == user.id,

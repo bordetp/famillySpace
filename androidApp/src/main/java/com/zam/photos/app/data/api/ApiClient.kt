@@ -47,7 +47,7 @@ fun createHttpClient(tokenStore: TokenStore): HttpClient = HttpClient(OkHttp) {
 private fun freshBearerPlugin(tokenStore: TokenStore) = createClientPlugin("FreshBearer") {
     onRequest { request, _ ->
         val path = request.url.toString()
-        if (path.contains("/api/auth/google") || path.contains("/api/auth/dev")) return@onRequest
+        if (path.contains("/api/auth/google")) return@onRequest
         val token = tokenStore.getToken()
         if (!token.isNullOrBlank()) {
             request.headers.remove(HttpHeaders.Authorization)

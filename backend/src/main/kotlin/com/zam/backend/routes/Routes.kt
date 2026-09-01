@@ -15,7 +15,6 @@ import com.zam.shared.CreateFamilyRequest
 import com.zam.shared.CreateGroupRequest
 import com.zam.shared.CreatePostRequest
 import com.zam.shared.FamilyMeResponse
-import com.zam.shared.DevAuthRequest
 import com.zam.shared.FcmTokenRequest
 import com.zam.shared.GoogleAuthRequest
 import com.zam.shared.HealthResponse
@@ -77,10 +76,6 @@ fun Route.authRoutes(authService: AuthService) {
         post("/google") {
             val request = call.receive<GoogleAuthRequest>()
             call.respond(authService.googleSignIn(request))
-        }
-        post("/dev") {
-            val request = call.receive<DevAuthRequest>()
-            call.respond(authService.devSignIn(request.secret))
         }
         authenticate("auth-jwt") {
             get("/me") {

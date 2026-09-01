@@ -27,8 +27,10 @@ import com.zam.backend.repository.PostWithAuthor
 import com.zam.backend.repository.UserEntity
 import com.zam.backend.repository.UserRepository
 import com.zam.backend.repository.toDto
+import org.jetbrains.exposed.sql.Case
 import org.jetbrains.exposed.sql.ResultRow
 import org.jetbrains.exposed.sql.SortOrder
+import org.jetbrains.exposed.sql.intLiteral
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.greater
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.inList
@@ -152,8 +154,18 @@ class PostgresUserRepository : UserRepository {
         } else {
             UsersTable.select { UsersTable.approvalStatus eq status }
         }
-        query
-            .orderBy(UsersTable.createdAt to SortOrder.DESC)
+        val ordered = if (status.isNullOrBlank()) {
+            query.orderBy(
+                Case()
+                    .When(UsersTable.approvalStatus eq "pending", intLiteral(0))
+                    .When(UsersTable.approvalStatus eq "approved", intLiteral(1))
+                    .Else(intLiteral(2)) to SortOrder.ASC,
+                UsersTable.createdAt to SortOrder.DESC
+            )
+        } else {
+            query.orderBy(UsersTable.createdAt to SortOrder.DESC)
+        }
+        ordered
             .limit(limit, offset.toLong())
             .map { it.toEntity() }
     }

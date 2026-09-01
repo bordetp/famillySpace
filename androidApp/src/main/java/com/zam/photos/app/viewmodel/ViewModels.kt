@@ -475,10 +475,10 @@ class ModerationViewModel(
     }
 
     private suspend fun loadUsers() {
-        when (val result = adminRepository.listUsers(status = "pending")) {
+        when (val result = adminRepository.listUsers(status = null)) {
             is com.zam.photos.app.data.repository.ApiResult.Success -> {
                 _state.value = _state.value.copy(
-                    users = result.data.first,
+                    users = sortUsersForModeration(result.data.first),
                     usersTotal = result.data.second,
                     isLoading = false
                 )
@@ -487,6 +487,16 @@ class ModerationViewModel(
                 _state.value = _state.value.copy(isLoading = false, error = result.message)
             }
         }
+    }
+
+    private fun sortUsersForModeration(users: List<com.zam.photos.app.data.UserProfile>): List<com.zam.photos.app.data.UserProfile> {
+        val priority = mapOf("pending" to 0, "approved" to 1, "rejected" to 2)
+        return users.sortedWith(
+            compareBy(
+                { priority[it.approvalStatus.lowercase()] ?: 3 },
+                { it.name.lowercase() }
+            )
+        )
     }
 
     private suspend fun loadPosts() {
@@ -564,9 +574,11 @@ class ModerationViewModel(
             _state.value = _state.value.copy(deletingId = userId, error = null)
             when (val result = adminRepository.setUserApproval(userId, status)) {
                 is com.zam.photos.app.data.repository.ApiResult.Success -> {
+                    val updatedUsers = sortUsersForModeration(
+                        _state.value.users.map { if (it.id == userId) result.data else it }
+                    )
                     _state.value = _state.value.copy(
-                        users = _state.value.users.filterNot { it.id == userId },
-                        usersTotal = (_state.value.usersTotal - 1).coerceAtLeast(0),
+                        users = updatedUsers,
                         deletingId = null
                     )
                 }

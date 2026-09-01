@@ -522,7 +522,7 @@ class AdminRepository(private val client: HttpClient) {
         }
     }
 
-    suspend fun listUsers(status: String? = "pending", limit: Int = 50, offset: Int = 0): ApiResult<Pair<List<UserProfile>, Int>> {
+    suspend fun listUsers(status: String? = null, limit: Int = 50, offset: Int = 0): ApiResult<Pair<List<UserProfile>, Int>> {
         return try {
             val response = client.get("/api/admin/users") {
                 if (!status.isNullOrBlank()) parameter("status", status)

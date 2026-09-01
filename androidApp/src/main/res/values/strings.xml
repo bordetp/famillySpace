@@ -95,8 +95,8 @@
     <string name="moderation_users_tab">Connexions (%d)</string>
     <string name="moderation_posts_tab">Publications (%d)</string>
     <string name="moderation_comments_tab">Commentaires (%d)</string>
-    <string name="moderation_users_empty">Aucune demande</string>
-    <string name="moderation_users_empty_subtitle">Les nouvelles connexions à valider apparaîtront ici</string>
+    <string name="moderation_users_empty">Aucun utilisateur</string>
+    <string name="moderation_users_empty_subtitle">Les comptes et demandes de connexion apparaîtront ici</string>
     <string name="moderation_posts_empty">Aucune publication</string>
     <string name="moderation_posts_empty_subtitle">Rien à modérer pour le moment</string>
     <string name="moderation_comments_empty">Aucun commentaire</string>
@@ -107,9 +107,13 @@
     <string name="moderation_meta">%1$d j\'aime · %2$d commentaires · %3$s</string>
     <string name="moderation_approve">Autoriser</string>
     <string name="moderation_reject">Refuser</string>
+    <string name="moderation_block">Bloquer</string>
+    <string name="moderation_status_pending">En attente</string>
+    <string name="moderation_status_approved">Connecté</string>
+    <string name="moderation_status_rejected">Bloqué</string>
     <string name="approval_pending_title">Connexion en cours de validation</string>
     <string name="approval_pending_message">Votre compte a bien été créé. Un administrateur doit autoriser votre accès avant d\'ouvrir Family Space.</string>
-    <string name="approval_rejected_title">Accès refusé</string>
-    <string name="approval_rejected_message">Votre demande de connexion n\'a pas été acceptée. Vous pouvez vous déconnecter ou réessayer plus tard.</string>
+    <string name="approval_rejected_title">Espace réservé à la famille</string>
+    <string name="approval_rejected_message">Ce réseau est réservé à la famille. Aucun contenu ne vous sera affiché, par souci de confidentialité.</string>
     <string name="approval_check_again">Vérifier à nouveau</string>
 </resources>

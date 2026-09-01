@@ -50,6 +50,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import com.zam.photos.app.ModerationAccess
 import com.zam.photos.app.R
 import com.zam.photos.app.data.Comment
 import com.zam.photos.app.data.Post
@@ -210,6 +211,7 @@ private fun ModerationUserRow(
     onApprove: () -> Unit,
     onReject: () -> Unit
 ) {
+    val isAdminAccount = ModerationAccess.isModerator(user.email)
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -217,28 +219,75 @@ private fun ModerationUserRow(
             .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35f))
             .padding(14.dp)
     ) {
-        Text(user.name, fontWeight = FontWeight.SemiBold)
-        Text(user.email.ifBlank { user.username }, color = TextMuted, style = MaterialTheme.typography.bodySmall)
-        Spacer(modifier = Modifier.height(12.dp))
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Button(
-                onClick = onApprove,
-                enabled = !isBusy,
-                colors = ButtonDefaults.buttonColors(containerColor = Terracotta),
-                modifier = Modifier.weight(1f)
-            ) {
-                Icon(Icons.Outlined.Check, contentDescription = null, modifier = Modifier.size(18.dp))
-                Spacer(modifier = Modifier.size(6.dp))
-                Text(stringResource(R.string.moderation_approve))
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(user.name, fontWeight = FontWeight.SemiBold)
+                Text(user.email.ifBlank { user.username }, color = TextMuted, style = MaterialTheme.typography.bodySmall)
             }
-            OutlinedButton(
-                onClick = onReject,
-                enabled = !isBusy,
-                modifier = Modifier.weight(1f)
-            ) {
-                Icon(Icons.Outlined.Close, contentDescription = null, modifier = Modifier.size(18.dp))
-                Spacer(modifier = Modifier.size(6.dp))
-                Text(stringResource(R.string.moderation_reject))
+            Text(
+                text = when {
+                    user.isPending -> stringResource(R.string.moderation_status_pending)
+                    user.isRejected -> stringResource(R.string.moderation_status_rejected)
+                    else -> stringResource(R.string.moderation_status_approved)
+                },
+                color = when {
+                    user.isPending -> Terracotta
+                    user.isRejected -> MaterialTheme.colorScheme.error
+                    else -> TextMuted
+                },
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = FontWeight.Medium
+            )
+        }
+        if (!isAdminAccount) {
+            Spacer(modifier = Modifier.height(12.dp))
+            when {
+                user.isPending -> Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Button(
+                        onClick = onApprove,
+                        enabled = !isBusy,
+                        colors = ButtonDefaults.buttonColors(containerColor = Terracotta),
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Icon(Icons.Outlined.Check, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(modifier = Modifier.size(6.dp))
+                        Text(stringResource(R.string.moderation_approve))
+                    }
+                    OutlinedButton(
+                        onClick = onReject,
+                        enabled = !isBusy,
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Icon(Icons.Outlined.Close, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(modifier = Modifier.size(6.dp))
+                        Text(stringResource(R.string.moderation_reject))
+                    }
+                }
+
+                user.isApproved -> OutlinedButton(
+                    onClick = onReject,
+                    enabled = !isBusy,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Icon(Icons.Outlined.Close, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Spacer(modifier = Modifier.size(6.dp))
+                    Text(stringResource(R.string.moderation_block))
+                }
+
+                user.isRejected -> Button(
+                    onClick = onApprove,
+                    enabled = !isBusy,
+                    colors = ButtonDefaults.buttonColors(containerColor = Terracotta),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Icon(Icons.Outlined.Check, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Spacer(modifier = Modifier.size(6.dp))
+                    Text(stringResource(R.string.moderation_approve))
+                }
             }
         }
     }

@@ -12,7 +12,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.HourglassTop
-import androidx.compose.material.icons.outlined.Block
+import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
@@ -48,7 +48,7 @@ fun PendingApprovalScreen(
         verticalArrangement = Arrangement.Center
     ) {
         Icon(
-            imageVector = if (isRejected) Icons.Outlined.Block else Icons.Outlined.HourglassTop,
+            imageVector = if (isRejected) Icons.Outlined.Lock else Icons.Outlined.HourglassTop,
             contentDescription = null,
             modifier = Modifier.size(56.dp),
             tint = Terracotta

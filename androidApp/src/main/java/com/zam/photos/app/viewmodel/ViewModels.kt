@@ -475,7 +475,7 @@ class ModerationViewModel(
     }
 
     private suspend fun loadUsers() {
-        when (val result = adminRepository.listUsers(status = null)) {
+        when (val result = adminRepository.listAllUsers()) {
             is com.zam.photos.app.data.repository.ApiResult.Success -> {
                 _state.value = _state.value.copy(
                     users = sortUsersForModeration(result.data.first),

@@ -66,13 +66,10 @@ if [[ -z "${ANDROID_HOME:-}" && -z "${ANDROID_SDK_ROOT:-}" ]]; then
   done
 fi
 
-export GRADLE_OPTS="${GRADLE_OPTS:-} -Xmx2g -XX:MaxMetaspaceSize=512m"
+export GRADLE_OPTS="${GRADLE_OPTS:-} -Xmx4g -XX:MaxMetaspaceSize=512m"
 
-echo "==> Build AAB release..."
-./gradlew :androidApp:bundleRelease --no-daemon
-
-echo "==> Publish to Play Store (internal track)..."
-./gradlew :androidApp:publishReleaseBundle --no-daemon
+echo "==> Build + publish to Play Store (internal track)..."
+./gradlew :androidApp:publishReleaseBundle
 
 AAB="$PROJECT_ROOT/androidApp/build/outputs/bundle/release/androidApp-release.aab"
 echo ""

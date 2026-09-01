@@ -522,6 +522,18 @@ class AdminRepository(private val client: HttpClient) {
         }
     }
 
+    suspend fun listAllUsers(limit: Int = 50): ApiResult<Pair<List<UserProfile>, Int>> {
+        val merged = linkedMapOf<String, UserProfile>()
+        for (status in listOf("pending", "approved", "rejected")) {
+            when (val result = listUsers(status = status, limit = limit)) {
+                is ApiResult.Success -> result.data.first.forEach { merged[it.id] = it }
+                is ApiResult.Error -> return result
+            }
+        }
+        val users = merged.values.toList()
+        return ApiResult.Success(users to users.size)
+    }
+
     suspend fun listUsers(status: String? = null, limit: Int = 50, offset: Int = 0): ApiResult<Pair<List<UserProfile>, Int>> {
         return try {
             val response = client.get("/api/admin/users") {

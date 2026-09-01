@@ -230,11 +230,13 @@ private fun ModerationUserRow(
             }
             Text(
                 text = when {
+                    isAdminAccount -> stringResource(R.string.moderation_status_admin)
                     user.isPending -> stringResource(R.string.moderation_status_pending)
                     user.isRejected -> stringResource(R.string.moderation_status_rejected)
                     else -> stringResource(R.string.moderation_status_approved)
                 },
                 color = when {
+                    isAdminAccount -> Terracotta
                     user.isPending -> Terracotta
                     user.isRejected -> MaterialTheme.colorScheme.error
                     else -> TextMuted

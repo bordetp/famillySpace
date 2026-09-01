@@ -111,6 +111,7 @@
     <string name="moderation_status_pending">En attente</string>
     <string name="moderation_status_approved">Connecté</string>
     <string name="moderation_status_rejected">Bloqué</string>
+    <string name="moderation_status_admin">Admin</string>
     <string name="approval_pending_title">Connexion en cours de validation</string>
     <string name="approval_pending_message">Votre compte a bien été créé. Un administrateur doit autoriser votre accès avant d\'ouvrir Family Space.</string>
     <string name="approval_rejected_title">Espace réservé à la famille</string>

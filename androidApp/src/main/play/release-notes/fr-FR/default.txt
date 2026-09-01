@@ -1,1 +1,1 @@
-Notifications push, validation manuelle des connexions, modération admin, overlay mise à jour Play Store.
+Mode sombre, appareil photo et galerie pour publier une photo.

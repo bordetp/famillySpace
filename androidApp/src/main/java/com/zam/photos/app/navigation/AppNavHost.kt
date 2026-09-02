@@ -128,13 +128,20 @@ fun AppNavHost(
         if (isLoggedIn == true && profileUser?.isApproved == true) {
             inboxViewModel.refresh()
             val data = (context as? android.app.Activity)?.intent?.data
-            val postId = when {
-                data?.scheme == "familyspace" && data.host == "post" -> data.pathSegments.firstOrNull()
-                data?.pathSegments?.let { it.size >= 2 && it[0] == "post" } == true -> data.pathSegments[1]
-                else -> null
-            }
-            if (postId != null) {
-                navController.navigate(AppDestination.PostDetail.createRoute(postId))
+            when {
+                data?.scheme == "familyspace" && data.host == "post" -> {
+                    data.pathSegments.firstOrNull()?.let { postId ->
+                        navController.navigate(AppDestination.PostDetail.createRoute(postId))
+                    }
+                }
+                data?.scheme == "familyspace" && data.host == "conversation" -> {
+                    data.pathSegments.firstOrNull()?.let { conversationId ->
+                        navController.navigate(AppDestination.Chat.createRoute(conversationId))
+                    }
+                }
+                data?.pathSegments?.let { it.size >= 2 && it[0] == "post" } == true -> {
+                    navController.navigate(AppDestination.PostDetail.createRoute(data.pathSegments[1]))
+                }
             }
         }
     }
@@ -320,7 +327,10 @@ fun AppNavHost(
             }
             composable(
                 route = AppDestination.Chat.route,
-                arguments = listOf(navArgument("conversationId") { type = NavType.StringType })
+                arguments = listOf(navArgument("conversationId") { type = NavType.StringType }),
+                deepLinks = listOf(
+                    navDeepLink { uriPattern = "familyspace://conversation/{conversationId}" }
+                )
             ) { backStack ->
                 val id = backStack.arguments?.getString("conversationId") ?: return@composable
                 ChatThreadScreen(conversationId = id, onBack = { navController.popBackStack() })

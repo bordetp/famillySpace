@@ -72,7 +72,7 @@
     <string name="reply_to">Répondre à %s…</string>
     <string name="settings_notifications">Notifications</string>
     <string name="push_notifications">Notifications push</string>
-    <string name="push_notifications_hint">Les notifications in-app restent actives. Le push distant s\'active quand Firebase est configuré (FCM_SERVER_KEY côté serveur).</string>
+    <string name="push_notifications_hint">Les notifications push passent par Firebase. Active les notifs système pour Family Space.</string>
     <string name="family_section">Famille</string>
     <string name="family_name">Nom de la famille</string>
     <string name="create_family">Créer une famille</string>

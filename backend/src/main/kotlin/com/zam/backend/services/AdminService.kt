@@ -2,6 +2,8 @@ package com.zam.backend.services
 
 import com.zam.backend.AppConfig
 import com.zam.backend.repository.CommentRepository
+import com.zam.backend.repository.ConversationRepository
+import com.zam.backend.repository.FamilyRepository
 import com.zam.backend.repository.PostRepository
 import com.zam.backend.repository.UserRepository
 import com.zam.backend.repository.toDto
@@ -14,7 +16,9 @@ class AdminService(
     private val config: AppConfig,
     private val userRepository: UserRepository,
     private val postRepository: PostRepository,
-    private val commentRepository: CommentRepository
+    private val commentRepository: CommentRepository,
+    private val familyRepository: FamilyRepository,
+    private val conversationRepository: ConversationRepository
 ) {
     fun requireAdmin(userId: UUID) {
         val user = userRepository.findById(userId)
@@ -78,7 +82,18 @@ class AdminService(
         if (target.email.trim().lowercase() == config.adminEmail.trim().lowercase() && normalized != "approved") {
             throw ValidationException("Cannot change admin approval status", "FORBIDDEN")
         }
-        return userRepository.setApprovalStatus(targetUserId, normalized)?.toDto()
+        val updated = userRepository.setApprovalStatus(targetUserId, normalized)?.toDto()
             ?: throw ValidationException("User not found", "NOT_FOUND")
+        if (normalized == "approved") {
+            addToPrimaryFamily(targetUserId)
+        }
+        return updated
+    }
+
+    private fun addToPrimaryFamily(userId: UUID) {
+        val family = familyRepository.findPrimary() ?: return
+        if (familyRepository.findByMember(userId) != null) return
+        familyRepository.addMember(family.id, userId)
+        family.conversationId?.let { conversationRepository.addMember(it, userId) }
     }
 }

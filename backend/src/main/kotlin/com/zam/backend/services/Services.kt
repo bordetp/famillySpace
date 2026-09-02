@@ -15,7 +15,9 @@ import java.util.UUID
 class AuthService(
     private val config: AppConfig,
     private val userRepository: UserRepository,
-    private val googleIdTokenService: GoogleIdTokenService
+    private val googleIdTokenService: GoogleIdTokenService,
+    private val notificationService: NotificationService,
+    private val familyService: FamilyService
 ) {
     fun googleSignIn(request: GoogleAuthRequest): AuthResponse {
         val profile = googleIdTokenService.verify(request.idToken)
@@ -56,20 +58,43 @@ class AuthService(
                             )
                         }
                     }
-                    else -> userRepository.createFromGoogle(
-                        googleId = profile.googleId,
-                        email = profile.email,
-                        username = uniqueUsername(profile),
-                        displayName = profile.displayName,
-                        avatarUrl = profile.avatarUrl,
-                        approvalStatus = initialApprovalStatus(profile.email)
-                    )
+                    else -> {
+                        val created = userRepository.createFromGoogle(
+                            googleId = profile.googleId,
+                            email = profile.email,
+                            username = uniqueUsername(profile),
+                            displayName = profile.displayName,
+                            avatarUrl = profile.avatarUrl,
+                            approvalStatus = initialApprovalStatus(profile.email)
+                        )
+                        if (created.approvalStatus.equals("pending", ignoreCase = true)) {
+                            notifyAdminPendingSignup(created)
+                        }
+                        created
+                    }
                 }
             }
         }
 
         val approvedUser = ensureAdminApproved(user)
+        if (isAdminEmail(approvedUser.email)) {
+            familyService.ensurePrimaryForAdmin(approvedUser.id)
+        }
         return buildAuthResponse(approvedUser)
+    }
+
+    private fun notifyAdminPendingSignup(user: UserEntity) {
+        val adminEmail = config.adminEmail.trim()
+        val admin = userRepository.findByEmail(adminEmail)
+            ?: userRepository.findByEmail(adminEmail.lowercase())
+            ?: return
+        if (admin.id == user.id) return
+        notificationService.notify(
+            recipientId = admin.id,
+            actorId = user.id,
+            type = "PENDING_APPROVAL",
+            message = "demande à rejoindre Family Space"
+        )
     }
 
     fun me(userId: UUID): UserDto {

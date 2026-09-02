@@ -61,7 +61,8 @@ class PushTokenManager(
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
             when {
                 postId != null -> setData(android.net.Uri.parse("familyspace://post/$postId"))
-                conversationId != null -> putExtra("conversationId", conversationId)
+                conversationId != null ->
+                    setData(android.net.Uri.parse("familyspace://conversation/$conversationId"))
             }
         }
         val pendingIntent = PendingIntent.getActivity(

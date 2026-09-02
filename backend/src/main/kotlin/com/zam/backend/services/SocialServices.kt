@@ -48,15 +48,24 @@ class PostService(
         val safeLimit = limit.coerceIn(1, 50)
         val safeOffset = offset.coerceAtLeast(0)
         val family = familyRepository.findByMember(viewerId)
-        val authorIds = family?.let { familyRepository.memberIds(it.id) }
+        // Single-family product: no membership => empty feed (never the global catalog).
+        val authorIds = family?.let { familyRepository.memberIds(it.id) }.orEmpty()
+        if (authorIds.isEmpty()) return emptyList<PostDto>() to 0
         val posts = postRepository.list(viewerId, safeLimit, safeOffset, authorIds).map { it.toDto() }
         val total = postRepository.count(authorIds)
         return posts to total
     }
 
     fun getPost(id: UUID, viewerId: UUID): PostDto {
-        return postRepository.findById(id, viewerId)?.toDto()
+        val post = postRepository.findById(id, viewerId)
             ?: throw ValidationException("Post not found", "NOT_FOUND")
+        val viewerFamily = familyRepository.findByMember(viewerId)
+            ?: throw ValidationException("Post not found", "NOT_FOUND")
+        val memberIds = familyRepository.memberIds(viewerFamily.id)
+        if (post.authorId !in memberIds) {
+            throw ValidationException("Post not found", "NOT_FOUND")
+        }
+        return post.toDto()
     }
 
     fun createPost(authorId: UUID, content: String, imageUrl: String?): PostDto {
@@ -217,6 +226,7 @@ class NotificationService(
 class ChatService(
     private val conversationRepository: ConversationRepository,
     private val userRepository: UserRepository,
+    private val familyRepository: FamilyRepository,
     private val notificationService: NotificationService,
     private val chatHub: ChatHub
 ) {
@@ -281,7 +291,11 @@ class ChatService(
 
     fun searchUsers(userId: UUID, query: String): List<UserDto> {
         if (query.trim().length < 2) return emptyList()
-        return userRepository.search(query, userId).map { it.toDto() }
+        val family = familyRepository.findByMember(userId) ?: return emptyList()
+        val memberIds = familyRepository.memberIds(family.id).toSet()
+        return userRepository.search(query, userId)
+            .filter { it.id in memberIds }
+            .map { it.toDto() }
     }
 
     private fun ensureMember(conversationId: UUID, userId: UUID) {
@@ -330,7 +344,23 @@ class FamilyService(
         return family.toDto()
     }
 
+    /** Ensures the single family exists and the admin is a member. */
+    fun ensurePrimaryForAdmin(adminId: UUID): FamilyDto {
+        val existing = familyRepository.findPrimary()
+        if (existing != null) {
+            if (familyRepository.findByMember(adminId) == null) {
+                familyRepository.addMember(existing.id, adminId, role = "owner")
+                existing.conversationId?.let { conversationRepository.addMember(it, adminId) }
+            }
+            return familyRepository.findById(existing.id)!!.toDto()
+        }
+        return create(adminId, "Famille")
+    }
+
     fun create(userId: UUID, name: String): FamilyDto {
+        if (familyRepository.findPrimary() != null) {
+            throw ValidationException("A family already exists", "FAMILY_EXISTS")
+        }
         if (familyRepository.findByMember(userId) != null) {
             throw ValidationException("You already belong to a family", "ALREADY_IN_FAMILY")
         }

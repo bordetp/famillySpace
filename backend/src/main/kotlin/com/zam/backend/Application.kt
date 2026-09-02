@@ -70,12 +70,25 @@ fun Application.module(config: AppConfig = AppConfig()) {
     val chatHub = ChatHub()
     val fcmSender = FcmSender(config)
 
-    val authService = AuthService(config, userRepository, GoogleIdTokenService(config))
     val notificationService = NotificationService(notificationRepository, userRepository, fcmTokenRepository, fcmSender)
-    val postService = PostService(postRepository, commentRepository, likeRepository, familyRepository, notificationService)
-    val adminService = AdminService(config, userRepository, postRepository, commentRepository)
-    val chatService = ChatService(conversationRepository, userRepository, notificationService, chatHub)
     val familyService = FamilyService(familyRepository, conversationRepository, userRepository, notificationService)
+    val authService = AuthService(config, userRepository, GoogleIdTokenService(config), notificationService, familyService)
+    val postService = PostService(postRepository, commentRepository, likeRepository, familyRepository, notificationService)
+    val adminService = AdminService(
+        config,
+        userRepository,
+        postRepository,
+        commentRepository,
+        familyRepository,
+        conversationRepository
+    )
+    val chatService = ChatService(
+        conversationRepository,
+        userRepository,
+        familyRepository,
+        notificationService,
+        chatHub
+    )
     val deviceService = DeviceService(userRepository, fcmTokenRepository)
     val imageService = ImageService(config)
 

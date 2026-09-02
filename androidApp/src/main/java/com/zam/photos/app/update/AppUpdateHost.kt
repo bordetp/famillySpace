@@ -13,7 +13,11 @@ import androidx.compose.ui.platform.LocalContext
 import com.zam.photos.app.auth.findActivity
 import com.zam.photos.app.ui.components.RefreshOnResume
 import com.zam.photos.app.ui.components.UpdateAvailableOverlay
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+
+/** Play's listing often knows about an update before the In-App Update API (esp. internal testing). */
+private val RETRY_DELAYS_MS = listOf(15_000L, 45_000L, 120_000L)
 
 @Composable
 fun AppUpdateHost(
@@ -27,16 +31,36 @@ fun AppUpdateHost(
 
     RefreshOnResume {
         val currentActivity = activity ?: return@RefreshOnResume
+        // Re-prompt when returning to the app (e.g. after checking Play Store).
+        dismissed = false
         val checker = AppUpdateChecker(currentActivity)
-        when (val result = checker.check()) {
-            is AppUpdateStatus.Available -> {
-                if (result.forceUpdate || !dismissed) {
-                    status = result
+
+        suspend fun apply(result: AppUpdateStatus) {
+            when (result) {
+                is AppUpdateStatus.InProgress -> {
+                    checker.startInAppUpdate(result.info, forceUpdate = true)
+                }
+                is AppUpdateStatus.Available -> {
+                    if (result.forceUpdate || !dismissed) {
+                        status = result
+                    }
+                }
+                AppUpdateStatus.UpToDate -> {
+                    status = AppUpdateStatus.UpToDate
                 }
             }
-            AppUpdateStatus.UpToDate -> {
-                status = AppUpdateStatus.UpToDate
-                dismissed = false
+        }
+
+        var result = checker.check()
+        apply(result)
+
+        // Retry while foregrounded: listing often beats In-App Update API on internal track.
+        if (result is AppUpdateStatus.UpToDate) {
+            for (waitMs in RETRY_DELAYS_MS) {
+                delay(waitMs)
+                result = checker.check()
+                apply(result)
+                if (result !is AppUpdateStatus.UpToDate) break
             }
         }
     }

@@ -9,24 +9,29 @@ import com.google.android.play.core.appupdate.AppUpdateManagerFactory
 import com.google.android.play.core.appupdate.AppUpdateOptions
 import com.google.android.play.core.install.model.AppUpdateType
 import com.google.android.play.core.install.model.UpdateAvailability
-import kotlinx.coroutines.suspendCancellableCoroutine
-import kotlin.coroutines.resume
+import kotlinx.coroutines.tasks.await
 
 class AppUpdateChecker(private val activity: Activity) {
     private val appUpdateManager: AppUpdateManager = AppUpdateManagerFactory.create(activity)
 
     suspend fun check(): AppUpdateStatus {
         val info = awaitAppUpdateInfo() ?: return AppUpdateStatus.UpToDate
-        val available = info.updateAvailability() == UpdateAvailability.UPDATE_AVAILABLE
-        if (!available) return AppUpdateStatus.UpToDate
-
-        val immediate = info.isUpdateTypeAllowed(AppUpdateType.IMMEDIATE)
-        val flexible = info.isUpdateTypeAllowed(AppUpdateType.FLEXIBLE)
-        return AppUpdateStatus.Available(
-            info = info,
-            forceUpdate = immediate && !flexible,
-            allowsInAppUpdate = immediate || flexible
-        )
+        return when (info.updateAvailability()) {
+            UpdateAvailability.DEVELOPER_TRIGGERED_UPDATE_IN_PROGRESS ->
+                AppUpdateStatus.InProgress(info)
+            UpdateAvailability.UPDATE_AVAILABLE -> {
+                val immediate = info.isUpdateTypeAllowed(AppUpdateType.IMMEDIATE)
+                val flexible = info.isUpdateTypeAllowed(AppUpdateType.FLEXIBLE)
+                // Play priority 4–5 = force; internal testing often allows both types.
+                val forceUpdate = info.updatePriority() >= 4 || (immediate && !flexible)
+                AppUpdateStatus.Available(
+                    info = info,
+                    forceUpdate = forceUpdate,
+                    allowsInAppUpdate = immediate || flexible
+                )
+            }
+            else -> AppUpdateStatus.UpToDate
+        }
     }
 
     fun startInAppUpdate(info: AppUpdateInfo, forceUpdate: Boolean): Boolean {
@@ -66,14 +71,10 @@ class AppUpdateChecker(private val activity: Activity) {
     }
 
     private suspend fun awaitAppUpdateInfo(): AppUpdateInfo? =
-        suspendCancellableCoroutine { cont ->
-            appUpdateManager.appUpdateInfo
-                .addOnSuccessListener { info ->
-                    if (cont.isActive) cont.resume(info)
-                }
-                .addOnFailureListener {
-                    if (cont.isActive) cont.resume(null)
-                }
+        try {
+            appUpdateManager.appUpdateInfo.await()
+        } catch (_: Exception) {
+            null
         }
 }
 
@@ -84,4 +85,5 @@ sealed class AppUpdateStatus {
         val forceUpdate: Boolean,
         val allowsInAppUpdate: Boolean
     ) : AppUpdateStatus()
+    data class InProgress(val info: AppUpdateInfo) : AppUpdateStatus()
 }

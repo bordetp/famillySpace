@@ -663,6 +663,15 @@ class PostgresFamilyRepository : FamilyRepository {
         FamiliesTable.select { FamiliesTable.id eq id }.singleOrNull()?.toFamily()
     }
 
+    override fun findPrimary(): FamilyRecord? = transaction {
+        FamiliesTable
+            .selectAll()
+            .orderBy(FamiliesTable.createdAt to SortOrder.ASC)
+            .limit(1)
+            .singleOrNull()
+            ?.toFamily()
+    }
+
     override fun findByMember(userId: UUID): FamilyRecord? = transaction {
         val familyId = FamilyMembersTable
             .select { FamilyMembersTable.userId eq userId }

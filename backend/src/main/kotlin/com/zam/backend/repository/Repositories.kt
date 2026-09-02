@@ -144,6 +144,8 @@ data class FamilyRecord(
 interface FamilyRepository {
     fun create(name: String, createdBy: UUID, inviteCode: String, conversationId: UUID?): FamilyRecord
     fun findById(id: UUID): FamilyRecord?
+    /** The single family for this deployment, if any. */
+    fun findPrimary(): FamilyRecord?
     fun findByMember(userId: UUID): FamilyRecord?
     fun findByInviteCode(code: String): FamilyRecord?
     fun addMember(familyId: UUID, userId: UUID, role: String = "member")

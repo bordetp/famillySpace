@@ -7,15 +7,23 @@ import com.google.android.play.core.appupdate.AppUpdateInfo
 import com.google.android.play.core.appupdate.AppUpdateManager
 import com.google.android.play.core.appupdate.AppUpdateManagerFactory
 import com.google.android.play.core.appupdate.AppUpdateOptions
+import com.google.android.play.core.install.InstallStateUpdatedListener
 import com.google.android.play.core.install.model.AppUpdateType
+import com.google.android.play.core.install.model.InstallStatus
 import com.google.android.play.core.install.model.UpdateAvailability
 import kotlinx.coroutines.tasks.await
 
 class AppUpdateChecker(private val activity: Activity) {
     private val appUpdateManager: AppUpdateManager = AppUpdateManagerFactory.create(activity)
+    private var flexibleListener: InstallStateUpdatedListener? = null
 
     suspend fun check(): AppUpdateStatus {
         val info = awaitAppUpdateInfo() ?: return AppUpdateStatus.UpToDate
+        // Flexible download finished while app stayed open — apply and restart.
+        if (info.installStatus() == InstallStatus.DOWNLOADED) {
+            completeFlexibleUpdate()
+            return AppUpdateStatus.UpToDate
+        }
         return when (info.updateAvailability()) {
             UpdateAvailability.DEVELOPER_TRIGGERED_UPDATE_IN_PROGRESS ->
                 AppUpdateStatus.InProgress(info)
@@ -35,11 +43,15 @@ class AppUpdateChecker(private val activity: Activity) {
     }
 
     fun startInAppUpdate(info: AppUpdateInfo, forceUpdate: Boolean): Boolean {
+        // User tapped "Update" → prefer IMMEDIATE so Play restarts the app after install.
         val type = when {
             forceUpdate && info.isUpdateTypeAllowed(AppUpdateType.IMMEDIATE) -> AppUpdateType.IMMEDIATE
-            info.isUpdateTypeAllowed(AppUpdateType.FLEXIBLE) -> AppUpdateType.FLEXIBLE
             info.isUpdateTypeAllowed(AppUpdateType.IMMEDIATE) -> AppUpdateType.IMMEDIATE
+            info.isUpdateTypeAllowed(AppUpdateType.FLEXIBLE) -> AppUpdateType.FLEXIBLE
             else -> return false
+        }
+        if (type == AppUpdateType.FLEXIBLE) {
+            registerFlexibleListener()
         }
         return try {
             appUpdateManager.startUpdateFlow(
@@ -49,6 +61,7 @@ class AppUpdateChecker(private val activity: Activity) {
             )
             true
         } catch (_: Exception) {
+            unregisterFlexibleListener()
             false
         }
     }
@@ -68,6 +81,28 @@ class AppUpdateChecker(private val activity: Activity) {
         } catch (_: Exception) {
             activity.startActivity(webIntent)
         }
+    }
+
+    /** Applies a downloaded flexible update (triggers process restart). */
+    fun completeFlexibleUpdate() {
+        unregisterFlexibleListener()
+        runCatching { appUpdateManager.completeUpdate() }
+    }
+
+    private fun registerFlexibleListener() {
+        unregisterFlexibleListener()
+        val listener = InstallStateUpdatedListener { state ->
+            if (state.installStatus() == InstallStatus.DOWNLOADED) {
+                completeFlexibleUpdate()
+            }
+        }
+        flexibleListener = listener
+        appUpdateManager.registerListener(listener)
+    }
+
+    private fun unregisterFlexibleListener() {
+        flexibleListener?.let { appUpdateManager.unregisterListener(it) }
+        flexibleListener = null
     }
 
     private suspend fun awaitAppUpdateInfo(): AppUpdateInfo? =
